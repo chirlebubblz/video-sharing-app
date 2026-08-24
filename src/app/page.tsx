@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StudioRecorder } from '@/components/recorder/StudioRecorder';
-import { Video, Play, Clock, Eye, Sparkles, Film } from 'lucide-react';
+import { Video, Play, Clock, Eye, Sparkles, Film, Trash2 } from 'lucide-react';
 
 export default function Home() {
   const [userVideos, setUserVideos] = useState<any[]>([]);
@@ -53,6 +53,27 @@ export default function Home() {
       channel.close();
     };
   }, []);
+
+  const handleDeleteVideo = async (e: React.MouseEvent, videoId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm('Are you sure you want to delete this video recording?')) return;
+
+    setUserVideos((prev) => {
+      const updated = prev.filter((v) => v.id !== videoId);
+      try {
+        localStorage.setItem('dnl_my_videos', JSON.stringify(updated));
+      } catch (err) {}
+      return updated;
+    });
+
+    try {
+      await fetch(`/api/video/${videoId}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -111,9 +132,16 @@ export default function Home() {
               <a
                 key={video.id}
                 href={`/v/${video.id}`}
-                className="group bg-zinc-900/60 border border-zinc-800 hover:border-yellow-400/50 rounded-3xl overflow-hidden shadow-xl transition-all duration-200 flex flex-col justify-between"
+                className="group bg-zinc-900/60 border border-zinc-800 hover:border-yellow-400/50 rounded-3xl overflow-hidden shadow-xl transition-all duration-200 flex flex-col justify-between relative"
               >
                 <div className={`aspect-video ${video.thumbnail || 'bg-gradient-to-tr from-yellow-950 via-zinc-900 to-black'} relative flex items-center justify-center p-4 border-b border-zinc-800`}>
+                  <button
+                    onClick={(e) => handleDeleteVideo(e, video.id)}
+                    className="absolute top-3 right-3 p-2 bg-black/80 hover:bg-red-500 text-zinc-400 hover:text-white rounded-xl border border-zinc-700 transition z-10 opacity-0 group-hover:opacity-100 shadow-md"
+                    title="Delete Video"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                   <div className="w-14 h-14 rounded-full bg-yellow-400 group-hover:scale-110 transition flex items-center justify-center backdrop-blur-md text-black font-extrabold shadow-2xl border border-yellow-300">
                     <Play size={24} className="ml-1 fill-black" />
                   </div>

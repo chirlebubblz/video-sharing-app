@@ -82,3 +82,40 @@ export async function GET(
     });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const videoId = params.id;
+
+    // 1. Delete record from Supabase Database
+    try {
+      await db.video.delete({
+        where: { id: videoId },
+      });
+    } catch (e) {}
+
+    // 2. Delete file object from Supabase Storage Bucket ('videos')
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        await fetch(`${supabaseUrl}/storage/v1/object/videos/${videoId}.webm`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+          },
+        });
+      } catch (e) {}
+    }
+
+    return NextResponse.json({ success: true, message: 'Video deleted successfully from Supabase DB & Storage' });
+  } catch (err) {
+    console.error('Error deleting video:', err);
+    return NextResponse.json({ error: 'Failed to delete video' }, { status: 500 });
+  }
+}

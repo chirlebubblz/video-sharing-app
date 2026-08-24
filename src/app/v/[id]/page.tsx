@@ -20,6 +20,7 @@ import {
   FileText,
   FileCode,
   ArrowLeft,
+  Trash2,
 } from 'lucide-react';
 
 export default function VideoPage({ params }: { params: { id: string } }) {
@@ -27,6 +28,27 @@ export default function VideoPage({ params }: { params: { id: string } }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [activeTab, setActiveTab] = useState<'transcript' | 'editor' | 'comments' | 'analytics'>('transcript');
   const [copied, setCopied] = useState(false);
+
+  const handleDeleteVideoPage = async () => {
+    if (!confirm('Are you sure you want to delete this video recording permanently from Supabase & Library?')) return;
+
+    try {
+      const saved = localStorage.getItem('dnl_my_videos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const updated = parsed.filter((v) => v.id !== videoId);
+          localStorage.setItem('dnl_my_videos', JSON.stringify(updated));
+        }
+      }
+    } catch (e) {}
+
+    try {
+      await fetch(`/api/video/${videoId}`, { method: 'DELETE' });
+    } catch (e) {}
+
+    window.location.href = '/';
+  };
 
   // AI & Video Data
   const [aiData, setAiData] = useState<{
@@ -158,6 +180,13 @@ export default function VideoPage({ params }: { params: { id: string } }) {
             >
               {copied ? <CheckCircle2 size={15} /> : <Copy size={15} />}
               {copied ? 'Link Copied!' : 'Copy Share Link'}
+            </button>
+            <button
+              onClick={handleDeleteVideoPage}
+              className="px-3.5 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md"
+              title="Delete video from Supabase & Library"
+            >
+              <Trash2 size={15} /> Delete Video
             </button>
           </div>
         </div>
