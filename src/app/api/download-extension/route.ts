@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+    const zipArrayBuffer = await zip.generateAsync({ type: 'arraybuffer' });
 
-    return new NextResponse(zipBuffer, {
+    return new NextResponse(zipArrayBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
