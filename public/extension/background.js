@@ -26,12 +26,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ status: 'opened' });
   }
 
-  // Cross-origin relay for Home Screen Widescreen Monitor
-  if (request.action === 'RECORDING_STARTED' || request.action === 'RECORDING_STOPPED') {
+  // Cross-origin relay for Home Screen Widescreen Monitor & Video Library
+  if (
+    request.action === 'RECORDING_STARTED' ||
+    request.action === 'RECORDING_STOPPED' ||
+    request.action === 'LIVE_FRAME' ||
+    request.action === 'NEW_VIDEO'
+  ) {
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
         if (tab.url && (tab.url.includes('video-sharing-app-jordan.vercel.app') || tab.url.includes('localhost'))) {
-          chrome.tabs.sendMessage(tab.id, { action: request.action }).catch(() => {});
+          chrome.tabs.sendMessage(tab.id, request).catch(() => {});
         }
       });
     });

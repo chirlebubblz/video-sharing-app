@@ -527,8 +527,9 @@
             chrome.storage.local.set({ my_videos: updated, latest_video_id: data.videoId });
           });
 
-          // 2. Real-time broadcast to control screen
+          // 2. Real-time broadcast to control screen via background & BroadcastChannel
           try {
+            chrome.runtime.sendMessage({ action: 'NEW_VIDEO', video: videoObj });
             const channel = new BroadcastChannel('dnl_video_sync');
             channel.postMessage({ type: 'NEW_VIDEO', video: videoObj });
           } catch (e) {}
@@ -559,6 +560,10 @@
       window.postMessage({ type: 'RECORDING_STARTED' }, '*');
     } else if (request.action === 'RECORDING_STOPPED') {
       window.postMessage({ type: 'RECORDING_STOPPED' }, '*');
+    } else if (request.action === 'LIVE_FRAME' && request.frame) {
+      window.postMessage({ type: 'LIVE_FRAME', frame: request.frame }, '*');
+    } else if (request.action === 'NEW_VIDEO' && request.video) {
+      window.postMessage({ type: 'NEW_VIDEO', video: request.video }, '*');
     }
   });
 

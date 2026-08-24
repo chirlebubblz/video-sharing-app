@@ -2,27 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { StudioRecorder } from '@/components/recorder/StudioRecorder';
-import { Video, Play, Clock, Eye, Sparkles } from 'lucide-react';
+import { Video, Play, Clock, Eye, Sparkles, Film } from 'lucide-react';
 
 export default function Home() {
-  const [userVideos, setUserVideos] = useState<any[]>([
-    {
-      id: 'vid-demo-1',
-      title: 'Quick Product Walkthrough & Feature Tour',
-      duration: '0:32',
-      views: 42,
-      createdAt: '10 mins ago',
-      thumbnail: 'bg-gradient-to-tr from-yellow-950 via-zinc-900 to-black',
-    },
-    {
-      id: 'vid-demo-2',
-      title: 'AI Transcript-Driven Video Editing Demo',
-      duration: '1:15',
-      views: 18,
-      createdAt: '2 hours ago',
-      thumbnail: 'bg-gradient-to-tr from-zinc-900 via-amber-950 to-black',
-    },
-  ]);
+  const [userVideos, setUserVideos] = useState<any[]>([]);
 
   useEffect(() => {
     // 1. Load saved user recordings from localStorage
@@ -31,31 +14,40 @@ export default function Home() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setUserVideos((prev) => {
-            const combined = [...parsed, ...prev];
-            const unique = Array.from(new Map(combined.map((item) => [item.id, item])).values());
-            return unique;
-          });
+          setUserVideos(parsed);
         }
       } catch (e) {}
     }
 
-    // 2. Real-time BroadcastChannel sync across tabs (Extension -> Home Screen)
+    // 2. Real-time BroadcastChannel & Window postMessage sync across tabs
+    const handleNewVideo = (newVid: any) => {
+      setUserVideos((prev) => {
+        const updated = [newVid, ...prev.filter((v) => v.id !== newVid.id)];
+        try {
+          localStorage.setItem('dnl_my_videos', JSON.stringify(updated));
+        } catch (err) {}
+        return updated;
+      });
+    };
+
+    const handleWindowMessage = (e: MessageEvent) => {
+      if (e.data && e.data.type === 'NEW_VIDEO' && e.data.video) {
+        handleNewVideo(e.data.video);
+      }
+    };
+    window.addEventListener('message', handleWindowMessage);
+
     const channel = new BroadcastChannel('dnl_video_sync');
     channel.onmessage = (e) => {
       if (e.data && e.data.type === 'NEW_VIDEO' && e.data.video) {
-        const newVid = e.data.video;
-        setUserVideos((prev) => {
-          const updated = [newVid, ...prev.filter((v) => v.id !== newVid.id)];
-          try {
-            localStorage.setItem('dnl_my_videos', JSON.stringify(updated));
-          } catch (err) {}
-          return updated;
-        });
+        handleNewVideo(e.data.video);
       }
     };
 
-    return () => channel.close();
+    return () => {
+      window.removeEventListener('message', handleWindowMessage);
+      channel.close();
+    };
   }, []);
 
   return (
@@ -91,44 +83,58 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Video className="text-yellow-400" size={22} /> Your Recent Videos
+              <Video className="text-yellow-400" size={22} /> Your Video Library
             </h2>
-            <p className="text-xs text-zinc-400 mt-1">Revisit, share, or watch your previous screen recordings.</p>
+            <p className="text-xs text-zinc-400 mt-1">Videos recorded via your Chrome Extension will automatically appear here.</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {userVideos.map((video) => (
-            <a
-              key={video.id}
-              href={`/v/${video.id}`}
-              className="group bg-zinc-900/60 border border-zinc-800 hover:border-yellow-400/50 rounded-3xl overflow-hidden shadow-xl transition-all duration-200 flex flex-col justify-between"
-            >
-              <div className={`aspect-video ${video.thumbnail} relative flex items-center justify-center p-4 border-b border-zinc-800`}>
-                <div className="w-14 h-14 rounded-full bg-yellow-400 group-hover:scale-110 transition flex items-center justify-center backdrop-blur-md text-black font-extrabold shadow-2xl border border-yellow-300">
-                  <Play size={24} className="ml-1 fill-black" />
+        {userVideos.length === 0 ? (
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-12 text-center space-y-4 shadow-xl">
+            <div className="w-16 h-16 rounded-3xl bg-yellow-400/10 text-yellow-400 border border-yellow-400/30 flex items-center justify-center text-3xl mx-auto shadow-inner">
+              <Film size={28} />
+            </div>
+            <div className="space-y-1.5 max-w-sm mx-auto">
+              <h3 className="text-xl font-bold text-white">Your Video Library is Empty</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Click your <span className="text-yellow-400 font-bold">DefinitelyNotLoom Extension</span> icon to record your first video. Your completed recordings will be saved here automatically!
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {userVideos.map((video) => (
+              <a
+                key={video.id}
+                href={`/v/${video.id}`}
+                className="group bg-zinc-900/60 border border-zinc-800 hover:border-yellow-400/50 rounded-3xl overflow-hidden shadow-xl transition-all duration-200 flex flex-col justify-between"
+              >
+                <div className={`aspect-video ${video.thumbnail || 'bg-gradient-to-tr from-yellow-950 via-zinc-900 to-black'} relative flex items-center justify-center p-4 border-b border-zinc-800`}>
+                  <div className="w-14 h-14 rounded-full bg-yellow-400 group-hover:scale-110 transition flex items-center justify-center backdrop-blur-md text-black font-extrabold shadow-2xl border border-yellow-300">
+                    <Play size={24} className="ml-1 fill-black" />
+                  </div>
+                  <span className="absolute bottom-3 right-3 bg-black/80 font-mono text-xs text-yellow-400 px-2.5 py-1 rounded-md border border-zinc-700">
+                    {video.duration}
+                  </span>
                 </div>
-                <span className="absolute bottom-3 right-3 bg-black/80 font-mono text-xs text-yellow-400 px-2.5 py-1 rounded-md border border-zinc-700">
-                  {video.duration}
-                </span>
-              </div>
 
-              <div className="p-5 space-y-2">
-                <h3 className="font-bold text-base text-white group-hover:text-yellow-400 transition">
-                  {video.title}
-                </h3>
-                <div className="flex items-center gap-4 text-xs text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <Clock size={12} /> {video.createdAt}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye size={12} /> {video.views} Views
-                  </span>
+                <div className="p-5 space-y-2">
+                  <h3 className="font-bold text-base text-white group-hover:text-yellow-400 transition">
+                    {video.title}
+                  </h3>
+                  <div className="flex items-center gap-4 text-xs text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Clock size={12} /> {video.createdAt || 'Just now'}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye size={12} /> {video.views || 1} Views
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
-        </div>
+              </a>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );
