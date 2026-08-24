@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { put } from '@vercel/blob';
 import fs from 'fs';
 import path from 'path';
 
@@ -22,7 +23,19 @@ if (S3_ACCESS_KEY_ID && S3_SECRET_ACCESS_KEY && S3_BUCKET_NAME) {
 }
 
 export async function uploadVideoToStorage(buffer: Buffer, filename: string): Promise<string> {
-  // Option 1: Cloudflare R2 / AWS S3 Storage if credentials provided
+  // Option 1: Vercel Blob (Built-in Vercel storage)
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const blob = await put(`videos/${filename}`, buffer, {
+        access: 'public',
+      });
+      return blob.url;
+    } catch (err) {
+      console.warn('Vercel Blob upload failed:', err);
+    }
+  }
+
+  // Option 2: Cloudflare R2 / AWS S3 Storage if credentials provided
   if (s3Client && S3_BUCKET_NAME) {
     try {
       await s3Client.send(
@@ -43,14 +56,21 @@ export async function uploadVideoToStorage(buffer: Buffer, filename: string): Pr
     }
   }
 
-  // Option 2: Local File Storage (Fallback for local dev & desktop servers)
-  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+  // Option 3: Local File Storage (Fallback for local dev & desktop servers)
+  try {
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadsDir, filename);
+    fs.writeFileSync(filePath, buffer);
+
+    return `/uploads/${filename}`;
+  } catch (err) {
+    console.warn('Local disk upload failed (read-only environment):', err);
+    // Return inline data URL as last resort so client app doesn't crash
+    const base64 = buffer.toString('base64');
+    return `data:video/webm;base64,${base64}`;
   }
-
-  const filePath = path.join(uploadsDir, filename);
-  fs.writeFileSync(filePath, buffer);
-
-  return `/uploads/${filename}`;
 }
