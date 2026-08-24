@@ -116,8 +116,9 @@ export default function VideoPage({ params }: { params: { id: string } }) {
       {/* Navbar */}
       <header className="border-b border-gray-800 bg-gray-900/60 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
-            <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text">
+          <a href="/" className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight">
+            <img src="/icon.svg" alt="Viking Smiley Logo" className="w-7 h-7 shrink-0 drop-shadow" />
+            <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
               DefinitelyNotLoom
             </span>
           </a>
