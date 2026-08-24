@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, CameraOff, Move, Maximize2, Minimize2 } from 'lucide-react';
+import { CameraOff, Move, ExternalLink } from 'lucide-react';
 
 interface CameraBubbleProps {
   stream: MediaStream | null;
@@ -21,7 +21,7 @@ export function CameraBubble({
   onPositionChange,
 }: CameraBubbleProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [pos, setPos] = useState({ x: 40, y: window.innerHeight - 300 });
+  const [pos, setPos] = useState({ x: 40, y: typeof window !== 'undefined' ? window.innerHeight - 300 : 400 });
   const isDraggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
 
@@ -30,6 +30,20 @@ export function CameraBubble({
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
+
+  const togglePictureInPicture = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await videoRef.current.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.warn('Picture-in-picture error:', err);
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
@@ -82,6 +96,13 @@ export function CameraBubble({
 
       {/* Floating Camera Controls on Hover */}
       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+        <button
+          onClick={togglePictureInPicture}
+          className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full backdrop-blur-sm shadow-md"
+          title="Pop out camera to float over all tabs/windows (Picture-in-Picture)"
+        >
+          <ExternalLink size={16} />
+        </button>
         <button
           onClick={onToggleOff}
           className="p-2 bg-gray-900/80 hover:bg-gray-800 text-white rounded-full backdrop-blur-sm"
