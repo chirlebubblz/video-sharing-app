@@ -123,6 +123,20 @@ export default function VideoPage({ params }: { params: { id: string } }) {
           </a>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => {
+                if (!aiData?.videoUrl) return;
+                const a = document.createElement('a');
+                a.href = aiData.videoUrl;
+                a.download = `${aiData.title.toLowerCase().replace(/[^a-z0-0]+/g, '-')}.webm`;
+                a.target = '_blank';
+                a.click();
+              }}
+              className="px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 shadow-md"
+              title="Download raw HD video file"
+            >
+              <Download size={14} className="text-emerald-400" /> Download Video (.webm)
+            </button>
+            <button
               onClick={handleDownloadTxt}
               className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border border-gray-700"
               title="Save formatted transcript text"

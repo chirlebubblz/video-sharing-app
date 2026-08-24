@@ -381,55 +381,73 @@ export function StudioRecorder() {
         </div>
       )}
 
-      {/* Chrome Extension 3-Step Setup Guide */}
+      {/* Downloadables & Setup Guide */}
       {!isRecording && !previewUrl && (
-        <div className="mt-8 bg-purple-950/30 border border-purple-500/30 rounded-3xl p-6 shadow-xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mt-8 bg-gray-900/60 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Download className="text-purple-400" size={18} /> How to Install the Floating Chrome Extension
+                <Download className="text-indigo-400" size={18} /> Downloadable Apps & Media Options
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                Record with floating camera bubbles & live pen drawing over ANY website (Vercel, GitHub, Google, PowerPoint).
+                How to use the Windows Desktop app, Chrome Extension, and downloadable HD video files.
               </p>
             </div>
-            <a
-              href="/api/download-extension"
-              download
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-lg shrink-0"
-            >
-              <Download size={14} /> Download Extension (.zip)
-            </a>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="/api/download-exe"
+                download
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md"
+              >
+                <Monitor size={14} /> Desktop App (.exe)
+              </a>
+              <a
+                href="/api/download-extension"
+                download
+                className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md"
+              >
+                <Download size={14} /> Extension (.zip)
+              </a>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800 space-y-1">
-              <div className="font-bold text-purple-400 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">1</span>
-                Download & Extract
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
+            {/* Desktop App */}
+            <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
+              <div className="font-bold text-indigo-400 flex items-center gap-1.5">
+                <Monitor size={14} /> 1. Windows Desktop App (.exe)
               </div>
               <p className="text-gray-300 leading-relaxed">
-                Click <strong>Download Extension (.zip)</strong> and unzip the folder on your computer.
+                Click <strong>Desktop App (.exe)</strong> for 1-click download. Double-click the <code className="bg-gray-800 px-1 py-0.5 rounded text-indigo-300">.exe</code> file to run natively on Windows.
+              </p>
+              <div className="bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-500/20 text-[11px] text-indigo-200 space-y-1">
+                <div className="font-semibold text-indigo-300">⚡ What to Expect:</div>
+                <ul className="list-disc list-inside space-y-0.5 text-gray-300">
+                  <li>Zero installation required (Double-click to run).</li>
+                  <li>Native floating camera overlay over all Windows apps.</li>
+                  <li>Global hotkey: Press <code className="bg-gray-800 px-1 rounded text-indigo-300">Alt+Shift+R</code> anywhere to record.</li>
+                  <li>Auto-syncs recordings to Vercel cloud with live share links.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Chrome Extension */}
+            <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
+              <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                <Download size={14} /> 2. Chrome Extension (.zip)
+              </div>
+              <p className="text-gray-300 leading-relaxed">
+                Click <strong>Extension (.zip)</strong> and unzip the folder. Open <code className="bg-gray-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono">chrome://extensions</code>, toggle <strong>Developer mode</strong> ON, click <strong>Load unpacked</strong>, and select the folder!
               </p>
             </div>
 
-            <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800 space-y-1">
-              <div className="font-bold text-purple-400 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">2</span>
-                Enable Developer Mode
+            {/* Video File Download */}
+            <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
+              <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+                <Video size={14} /> 3. Recorded Video Files (.webm)
               </div>
               <p className="text-gray-300 leading-relaxed">
-                Open <code className="bg-gray-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono">chrome://extensions</code> in Chrome/Edge and toggle <strong>Developer mode</strong> ON.
-              </p>
-            </div>
-
-            <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800 space-y-1">
-              <div className="font-bold text-purple-400 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">3</span>
-                Load Unpacked
-              </div>
-              <p className="text-gray-300 leading-relaxed">
-                Click <strong>Load unpacked</strong> in Chrome and select the extracted extension folder!
+                Want to save the raw video file? Click <strong>Download .webm</strong> on any recording preview or video share page to save the HD 60fps video directly to your computer!
               </p>
             </div>
           </div>
