@@ -8,18 +8,43 @@ export default function Home() {
   const [userVideos, setUserVideos] = useState<any[]>([]);
 
   useEffect(() => {
-    // 1. Load saved user recordings from localStorage (purging old dummy videos)
-    const saved = localStorage.getItem('dnl_my_videos');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const filtered = parsed.filter((v) => v.id !== 'vid-demo-1' && v.id !== 'vid-demo-2');
-          setUserVideos(filtered);
-          localStorage.setItem('dnl_my_videos', JSON.stringify(filtered));
+    // 1. Fetch saved videos live from Supabase Database API & merge with localStorage
+    fetch('/api/videos')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.videos)) {
+          const dbVids = data.videos;
+          const saved = localStorage.getItem('dnl_my_videos');
+          let localVids: any[] = [];
+          if (saved) {
+            try {
+              localVids = JSON.parse(saved) || [];
+            } catch (e) {}
+          }
+          const merged = [...dbVids];
+          localVids.forEach((lv) => {
+            if (lv.id !== 'vid-demo-1' && lv.id !== 'vid-demo-2' && !merged.some((mv) => mv.id === lv.id)) {
+              merged.push(lv);
+            }
+          });
+          setUserVideos(merged);
+          try {
+            localStorage.setItem('dnl_my_videos', JSON.stringify(merged));
+          } catch (e) {}
         }
-      } catch (e) {}
-    }
+      })
+      .catch(() => {
+        const saved = localStorage.getItem('dnl_my_videos');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+              const filtered = parsed.filter((v) => v.id !== 'vid-demo-1' && v.id !== 'vid-demo-2');
+              setUserVideos(filtered);
+            }
+          } catch (e) {}
+        }
+      });
 
     // 2. Real-time BroadcastChannel & Window postMessage sync across tabs
     const handleNewVideo = (newVid: any) => {
