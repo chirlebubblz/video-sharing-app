@@ -1,4 +1,4 @@
-// DefinitelyNotLoom Content Script - Loom UI with Async MediaRecorder.onstop Upload Engine
+// DefinitelyNotLoom Content Script - 2MB Chunked Upload Engine for Vercel Payload Limits
 (function () {
   if (window.__dnlInjected) return;
   window.__dnlInjected = true;
@@ -16,7 +16,7 @@
   let isPenActive = false;
 
   let launcherCardEl = null;
-  let leftDockEl = null;
+  let rightDockEl = null;
   let cameraBubbleEl = null;
   let canvasEl = null;
   let ctx = null;
@@ -247,7 +247,7 @@
 
   function togglePause() {
     if (!mediaRecorder) return;
-    const btn = document.getElementById('dnl-left-pause');
+    const btn = document.getElementById('dnl-right-pause');
     const timerEl = document.getElementById('dnl-timer');
 
     if (isPaused) {
@@ -265,7 +265,7 @@
 
   function togglePen() {
     isPenActive = !isPenActive;
-    const btn = document.getElementById('dnl-left-pen');
+    const btn = document.getElementById('dnl-right-pen');
     if (isPenActive) {
       canvasEl.style.pointerEvents = 'auto';
       canvasEl.style.cursor = 'crosshair';
@@ -285,15 +285,10 @@
     cleanupRecordingUI();
   }
 
-  function restartRecording() {
-    cancelRecording();
-    setTimeout(startRecording, 300);
-  }
-
   function cleanupRecordingUI() {
     isRecording = false;
     clearInterval(timerInterval);
-    if (leftDockEl) leftDockEl.remove();
+    if (rightDockEl) rightDockEl.remove();
     if (cameraBubbleEl) cameraBubbleEl.remove();
     if (canvasEl) canvasEl.remove();
     if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
@@ -315,7 +310,6 @@
       elapsedSeconds = 0;
       isPaused = false;
 
-      // Request native desktop screen stream via chrome.desktopCapture background API
       chrome.runtime.sendMessage({ action: 'request_desktop_stream' }, async (response) => {
         if (!response || !response.streamId) {
           try {
@@ -386,13 +380,13 @@
     }
   }
 
-  // Async MediaRecorder.onstop Upload Engine
+  // 2MB Chunked Slice Upload Engine (Bypasses Vercel 4.5MB Body Limit)
   async function stopRecordingAndUpload() {
     if (!isRecording) return;
     isRecording = false;
     clearInterval(timerInterval);
 
-    const btnFinish = document.getElementById('dnl-left-finish');
+    const btnFinish = document.getElementById('dnl-right-finish');
     if (btnFinish) btnFinish.innerText = '⏳';
 
     if (!mediaRecorder) {
@@ -402,16 +396,52 @@
 
     mediaRecorder.onstop = async () => {
       const blob = new Blob(recordedChunks, { type: 'video/webm' });
-      const formData = new FormData();
-      formData.append('video', blob, 'loom-recording.webm');
+      if (blob.size === 0) {
+        cleanupRecordingUI();
+        return;
+      }
+
+      const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB per chunk (Vercel limit is 4.5MB)
+      const totalChunks = Math.ceil(blob.size / CHUNK_SIZE);
+      const uploadId = `up-${Date.now()}`;
+      const videoId = `vid-${Date.now()}`;
 
       try {
-        const res = await fetch('https://video-sharing-app-jordan.vercel.app/api/upload/chunk', {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.videoId) {
+        let data = null;
+
+        if (totalChunks <= 1) {
+          const formData = new FormData();
+          formData.append('video', blob, 'loom-recording.webm');
+          formData.append('videoId', videoId);
+
+          const res = await fetch('https://video-sharing-app-jordan.vercel.app/api/upload/chunk', {
+            method: 'POST',
+            body: formData,
+          });
+          data = await res.json();
+        } else {
+          // Multi-chunk slice loop (2MB per slice)
+          for (let i = 0; i < totalChunks; i++) {
+            const start = i * CHUNK_SIZE;
+            const end = Math.min(blob.size, start + CHUNK_SIZE);
+            const chunkSlice = blob.slice(start, end);
+
+            const formData = new FormData();
+            formData.append('chunk', chunkSlice, `chunk-${i}.part`);
+            formData.append('uploadId', uploadId);
+            formData.append('chunkIndex', i.toString());
+            formData.append('totalChunks', totalChunks.toString());
+            formData.append('videoId', videoId);
+
+            const res = await fetch('https://video-sharing-app-jordan.vercel.app/api/upload/chunk', {
+              method: 'POST',
+              body: formData,
+            });
+            data = await res.json();
+          }
+        }
+
+        if (data && data.videoId) {
           const videoObj = {
             id: data.videoId,
             title: `Extension Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
@@ -428,7 +458,7 @@
             chrome.storage.local.set({ my_videos: updated, latest_video_id: data.videoId });
           });
 
-          // 2. Real-time broadcast to control screen if open in another tab
+          // 2. Real-time broadcast to control screen
           try {
             const channel = new BroadcastChannel('dnl_video_sync');
             channel.postMessage({ type: 'NEW_VIDEO', video: videoObj });

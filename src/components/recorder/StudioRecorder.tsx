@@ -94,19 +94,53 @@ export function StudioRecorder() {
   const handleSimulatedUpload = async () => {
     if (!recordedBlob) return;
     setIsUploading(true);
+
+    const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB per chunk (Vercel payload limit is 4.5MB)
+    const totalChunks = Math.ceil(recordedBlob.size / CHUNK_SIZE);
+    const uploadId = `up-${Date.now()}`;
+    const videoId = `vid-${Date.now()}`;
+
     try {
-      const formData = new FormData();
-      formData.append('video', recordedBlob, 'recording.webm');
-      if (liveTranscript.length > 0) {
-        formData.append('transcript', JSON.stringify(liveTranscript));
+      let data = null;
+
+      if (totalChunks <= 1) {
+        const formData = new FormData();
+        formData.append('video', recordedBlob, 'recording.webm');
+        formData.append('videoId', videoId);
+        if (liveTranscript.length > 0) {
+          formData.append('transcript', JSON.stringify(liveTranscript));
+        }
+
+        const res = await fetch('/api/upload/chunk', {
+          method: 'POST',
+          body: formData,
+        });
+        data = await res.json();
+      } else {
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(recordedBlob.size, start + CHUNK_SIZE);
+          const chunkSlice = recordedBlob.slice(start, end);
+
+          const formData = new FormData();
+          formData.append('chunk', chunkSlice, `chunk-${i}.part`);
+          formData.append('uploadId', uploadId);
+          formData.append('chunkIndex', i.toString());
+          formData.append('totalChunks', totalChunks.toString());
+          formData.append('videoId', videoId);
+          if (i === totalChunks - 1 && liveTranscript.length > 0) {
+            formData.append('transcript', JSON.stringify(liveTranscript));
+          }
+
+          const res = await fetch('/api/upload/chunk', {
+            method: 'POST',
+            body: formData,
+          });
+          data = await res.json();
+        }
       }
-      
-      const res = await fetch('/api/upload/chunk', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.videoId) {
+
+      if (data && data.videoId) {
         setUploadedVideoId(data.videoId);
       }
     } catch (err) {
