@@ -25,6 +25,7 @@ export function StudioRecorder() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
   const [isExtensionRecording, setIsExtensionRecording] = useState(false);
+  const [liveFrameUrl, setLiveFrameUrl] = useState<string | null>(null);
 
   const {
     cameraStream,
@@ -43,13 +44,17 @@ export function StudioRecorder() {
     setBubblePosition,
   } = useScreenRecorder();
 
-  // Listen for cross-tab and cross-origin Extension recording start/stop events
+  // Listen for cross-tab and cross-origin Extension recording start/stop events & live video frames
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'RECORDING_STARTED') {
         setIsExtensionRecording(true);
       } else if (event.data?.type === 'RECORDING_STOPPED' || event.data?.type === 'NEW_VIDEO') {
         setIsExtensionRecording(false);
+        setLiveFrameUrl(null);
+      } else if (event.data?.type === 'LIVE_FRAME' && event.data?.frame) {
+        setIsExtensionRecording(true);
+        setLiveFrameUrl(event.data.frame);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -60,6 +65,7 @@ export function StudioRecorder() {
         setIsExtensionRecording(true);
       } else if (event.data?.type === 'RECORDING_STOPPED' || event.data?.type === 'NEW_VIDEO') {
         setIsExtensionRecording(false);
+        setLiveFrameUrl(null);
       }
     };
 
@@ -220,6 +226,8 @@ export function StudioRecorder() {
                 playsInline
                 className="w-full h-full object-contain"
               />
+            ) : liveFrameUrl ? (
+              <img src={liveFrameUrl} alt="Live Screen Stream" className="w-full h-full object-contain" />
             ) : (
               <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 bg-gradient-to-b from-red-950/40 via-zinc-900 to-black">
                 <div className="relative">

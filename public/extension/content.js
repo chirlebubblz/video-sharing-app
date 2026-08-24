@@ -299,9 +299,45 @@
     cleanupRecordingUI();
   }
 
+  let frameStreamInterval = null;
+
+  function startLiveFrameBroadcasting(stream) {
+    if (frameStreamInterval) clearInterval(frameStreamInterval);
+
+    const hiddenVid = document.createElement('video');
+    hiddenVid.autoplay = true;
+    hiddenVid.muted = true;
+    hiddenVid.playsInline = true;
+    hiddenVid.srcObject = stream;
+    hiddenVid.play().catch(() => {});
+
+    const hiddenCanvas = document.createElement('canvas');
+    hiddenCanvas.width = 640;
+    hiddenCanvas.height = 360;
+    const hCtx = hiddenCanvas.getContext('2d');
+
+    frameStreamInterval = setInterval(() => {
+      if (hiddenVid.readyState >= 2 && hCtx) {
+        hCtx.drawImage(hiddenVid, 0, 0, 640, 360);
+        try {
+          const frameData = hiddenCanvas.toDataURL('image/jpeg', 0.4);
+          chrome.storage.local.set({ extension_live_frame: frameData });
+        } catch (e) {}
+      }
+    }, 250);
+  }
+
+  function stopLiveFrameBroadcasting() {
+    if (frameStreamInterval) {
+      clearInterval(frameStreamInterval);
+      frameStreamInterval = null;
+    }
+  }
+
   function cleanupRecordingUI() {
     isRecording = false;
     clearInterval(timerInterval);
+    stopLiveFrameBroadcasting();
 
     try {
       chrome.storage.local.set({ extension_recording_state: 'RECORDING_STOPPED', state_timestamp: Date.now() });
@@ -380,6 +416,9 @@
         mediaRecorder.start(1000);
         isRecording = true;
         startTime = Date.now();
+
+        // Broadcast live frames to home screen widescreen monitor
+        startLiveFrameBroadcasting(mediaStream);
 
         // Broadcast recording started state via chrome.storage.local, extension background & BroadcastChannel
         try {
@@ -530,11 +569,16 @@
     }
   });
 
-  // Storage state listener to sync recording status across all tabs
+  // Storage state listener to sync recording status & live video frames across all tabs
   try {
     chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local' && changes.extension_recording_state) {
-        window.postMessage({ type: changes.extension_recording_state.newValue }, '*');
+      if (namespace === 'local') {
+        if (changes.extension_recording_state) {
+          window.postMessage({ type: changes.extension_recording_state.newValue }, '*');
+        }
+        if (changes.extension_live_frame) {
+          window.postMessage({ type: 'LIVE_FRAME', frame: changes.extension_live_frame.newValue }, '*');
+        }
       }
     });
 
