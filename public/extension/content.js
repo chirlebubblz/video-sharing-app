@@ -488,4 +488,16 @@
       sendResponse({ status: 'launcher_opened' });
     }
   });
+
+  // Listen for web app trigger from video-sharing-app-jordan.vercel.app control page
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'START_LOOM_RECORDING_FROM_WEB') {
+      showLauncherCard();
+    }
+  });
+
+  // Announce to web app that DefinitelyNotLoom Extension is present
+  try {
+    window.postMessage({ type: 'DNL_EXTENSION_INSTALLED' }, '*');
+  } catch (e) {}
 })();

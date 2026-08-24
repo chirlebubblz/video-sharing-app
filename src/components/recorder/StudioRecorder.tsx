@@ -70,6 +70,12 @@ export function StudioRecorder() {
   };
 
   const openLauncherCard = () => {
+    // 1. Trigger Chrome Extension native overlay if installed
+    try {
+      window.postMessage({ type: 'START_LOOM_RECORDING_FROM_WEB' }, '*');
+    } catch (e) {}
+
+    // 2. Open web launcher modal
     setShowLauncherModal(true);
   };
 
