@@ -48,14 +48,35 @@ export default function VideoPage({ params }: { params: { id: string } }) {
     fetch(`/api/video/${videoId}${incrementParam}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!data.error) {
+        if (data && !data.error && data.title) {
           setAiData(data);
           if (isFirstView) {
             sessionStorage.setItem(hasViewedKey, 'true');
           }
+        } else {
+          setAiData({
+            id: videoId,
+            title: 'Recorded Screen Video',
+            summary: '• Recorded speech & AI intelligence session.',
+            actionItems: ['Review recording session'],
+            chapters: [{ time: 0, title: 'Video Recording' }],
+            videoUrl: `/uploads/${videoId}.webm`,
+            transcripts: [],
+          });
         }
       })
-      .catch((err) => console.error('Failed to load video:', err));
+      .catch((err) => {
+        console.error('Failed to load video:', err);
+        setAiData({
+          id: videoId,
+          title: 'Recorded Screen Video',
+          summary: '• Recorded speech & AI intelligence session.',
+          actionItems: ['Review recording session'],
+          chapters: [{ time: 0, title: 'Video Recording' }],
+          videoUrl: `/uploads/${videoId}.webm`,
+          transcripts: [],
+        });
+      });
   }, [videoId]);
 
   const handleDownloadSrt = () => {
