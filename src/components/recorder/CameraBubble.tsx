@@ -35,6 +35,35 @@ export function CameraBubble({
     e.stopPropagation();
     if (!videoRef.current) return;
     try {
+      // 1. Try Document Picture-in-Picture API (Chrome/Edge 116+) for floating HTML elements
+      if ('documentPictureInPicture' in window && (window as any).documentPictureInPicture) {
+        if ((window as any).documentPictureInPicture.window) {
+          (window as any).documentPictureInPicture.window.close();
+          return;
+        }
+        const pipWin = await (window as any).documentPictureInPicture.requestWindow({
+          width: 280,
+          height: 280,
+        });
+        
+        const container = pipWin.document.createElement('div');
+        container.style.cssText = 'width:100%;height:100%;overflow:hidden;border-radius:50%;background:#0f172a;display:flex;align-items:center;justify-content:center;border:4px solid #6366f1;box-shadow:0 10px 25px rgba(0,0,0,0.5);';
+        
+        const vid = pipWin.document.createElement('video');
+        vid.srcObject = videoRef.current.srcObject || stream;
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.style.cssText = 'width:100%;height:100%;object-fit:cover;transform:scaleX(-1);';
+        
+        container.appendChild(vid);
+        pipWin.document.body.style.margin = '0';
+        pipWin.document.body.style.background = 'transparent';
+        pipWin.document.body.style.overflow = 'hidden';
+        pipWin.document.body.appendChild(container);
+        return;
+      }
+
+      // 2. Standard Video Picture-in-Picture API Fallback
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
       } else {
@@ -99,7 +128,7 @@ export function CameraBubble({
         <button
           onClick={togglePictureInPicture}
           className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full backdrop-blur-sm shadow-md"
-          title="Pop out camera to float over all tabs/windows (Picture-in-Picture)"
+          title="Pop out floating camera over all windows & tabs (Document PiP)"
         >
           <ExternalLink size={16} />
         </button>

@@ -493,7 +493,7 @@ export function StudioRecorder() {
               <div>
                 <div className="text-sm font-semibold text-indigo-400">Shareable Video Page Ready</div>
                 <div className="text-xs text-gray-400 font-mono mt-0.5">
-                  http://localhost:3000/v/{uploadedVideoId}
+                  {typeof window !== 'undefined' ? `${window.location.origin}/v/${uploadedVideoId}` : `/v/${uploadedVideoId}`}
                 </div>
               </div>
               <a
