@@ -7,26 +7,25 @@ import { CameraBubble } from './CameraBubble';
 import { AnnotationCanvas } from './AnnotationCanvas';
 import {
   Video,
+  VideoOff,
   Mic,
   MicOff,
-  Pause,
-  Play,
-  Square,
-  Sparkles,
-  Pencil,
-  Download,
-  Share2,
-  Settings,
+  Monitor,
   Circle,
   Square as SquareIcon,
-  Monitor,
-  Layout,
+  Play,
+  Pause,
+  RotateCcw,
+  Square,
+  Sparkles,
+  Download,
+  Share2,
   RefreshCw,
+  Pencil,
   CheckCircle2,
   AlertCircle,
-  VideoOff,
-  Volume2,
-  RotateCcw,
+  Layout,
+  X,
 } from 'lucide-react';
 
 export function StudioRecorder() {
@@ -37,6 +36,7 @@ export function StudioRecorder() {
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
+  const [showLauncherModal, setShowLauncherModal] = useState(false);
 
   const { hasCamera, hasMic, cameras, microphones, refreshDevices } = useMediaDevices();
   const {
@@ -69,7 +69,12 @@ export function StudioRecorder() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleStart = () => {
+  const openLauncherCard = () => {
+    setShowLauncherModal(true);
+  };
+
+  const handleStartActualRecording = () => {
+    setShowLauncherModal(false);
     startRecording({
       includeMic,
       includeCamera,
@@ -186,6 +191,62 @@ export function StudioRecorder() {
         )}
       </div>
 
+      {/* Loom-Style Floating Launcher Card (Top Right) */}
+      {showLauncherModal && !isRecording && (
+        <div className="fixed top-16 right-8 w-80 bg-zinc-900 border border-zinc-800/80 rounded-2xl p-5 shadow-2xl z-50 backdrop-blur-xl text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-yellow-400 text-black flex items-center justify-center font-extrabold text-base shadow">
+                😉
+              </div>
+              <div>
+                <div className="font-extrabold text-sm text-yellow-400">DefinitelyNotLoom</div>
+                <div className="text-[11px] text-gray-400">Viking Studio Launcher</div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowLauncherModal(false)}
+              className="text-gray-400 hover:text-white transition p-1"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="space-y-2.5 mb-4">
+            <button
+              onClick={() => setIncludeCamera(true)}
+              className={`w-full p-3 rounded-xl text-xs font-semibold text-left flex items-center justify-between transition ${
+                includeCamera ? 'bg-zinc-800 border border-yellow-400 text-white' : 'bg-zinc-950/60 border border-zinc-800 text-gray-400'
+              }`}
+            >
+              <span>🖥️ Full Screen + Camera</span>
+              {includeCamera && <span className="text-yellow-400 font-bold">✓</span>}
+            </button>
+            <button
+              onClick={() => setIncludeCamera(false)}
+              className={`w-full p-3 rounded-xl text-xs font-semibold text-left flex items-center justify-between transition ${
+                !includeCamera ? 'bg-zinc-800 border border-yellow-400 text-white' : 'bg-zinc-950/60 border border-zinc-800 text-gray-400'
+              }`}
+            >
+              <span>📷 Camera Only</span>
+              {!includeCamera && <span className="text-yellow-400 font-bold">✓</span>}
+            </button>
+          </div>
+
+          <div className="bg-zinc-950 p-3 rounded-xl mb-5 flex items-center justify-between text-xs">
+            <span className="text-gray-300">🎙️ Microphone</span>
+            <span className="text-yellow-400 font-bold">Connected</span>
+          </div>
+
+          <button
+            onClick={handleStartActualRecording}
+            className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm"
+          >
+            Start Recording Now
+          </button>
+        </div>
+      )}
+
       {/* Main Content Area */}
       {!isRecording && !previewUrl && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -234,16 +295,14 @@ export function StudioRecorder() {
             {/* Mode Selection */}
             <div className="grid grid-cols-3 gap-4">
               <button
-                onClick={() => {
-                  setIncludeCamera(true);
-                }}
+                onClick={() => setIncludeCamera(true)}
                 className={`p-4 rounded-2xl border text-left transition ${
                   includeCamera
-                    ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                    ? 'border-yellow-400 bg-yellow-400/10 text-white'
                     : 'border-gray-800 bg-gray-950/50 text-gray-400 hover:border-gray-700'
                 }`}
               >
-                <Video size={24} className={includeCamera ? 'text-indigo-400 mb-2' : 'mb-2'} />
+                <Video size={24} className={includeCamera ? 'text-yellow-400 mb-2' : 'mb-2'} />
                 <div className="font-semibold text-sm">Screen + Cam</div>
                 <div className="text-xs text-gray-400 mt-0.5">Recommended</div>
               </button>
@@ -252,11 +311,11 @@ export function StudioRecorder() {
                 onClick={() => setIncludeCamera(false)}
                 className={`p-4 rounded-2xl border text-left transition ${
                   !includeCamera
-                    ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                    ? 'border-yellow-400 bg-yellow-400/10 text-white'
                     : 'border-gray-800 bg-gray-950/50 text-gray-400 hover:border-gray-700'
                 }`}
               >
-                <Monitor size={24} className={!includeCamera ? 'text-indigo-400 mb-2' : 'mb-2'} />
+                <Monitor size={24} className={!includeCamera ? 'text-yellow-400 mb-2' : 'mb-2'} />
                 <div className="font-semibold text-sm">Screen Only</div>
                 <div className="text-xs text-gray-400 mt-0.5">Desktop or Tab</div>
               </button>
@@ -285,7 +344,7 @@ export function StudioRecorder() {
             {includeCamera && (
               <div className="border-t border-gray-800 pt-6 space-y-4">
                 <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                  <Layout size={16} className="text-indigo-400" /> Camera Overlay Style
+                  <Layout size={16} className="text-yellow-400" /> Camera Overlay Style
                 </h3>
                 <div className="flex items-center gap-6">
                   {/* Shape */}
@@ -294,7 +353,7 @@ export function StudioRecorder() {
                       onClick={() => setCameraShape('circle')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                         cameraShape === 'circle'
-                          ? 'bg-indigo-600 text-white'
+                          ? 'bg-yellow-400 text-black font-extrabold'
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
@@ -304,7 +363,7 @@ export function StudioRecorder() {
                       onClick={() => setCameraShape('square')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                         cameraShape === 'square'
-                          ? 'bg-indigo-600 text-white'
+                          ? 'bg-yellow-400 text-black font-extrabold'
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
@@ -320,7 +379,7 @@ export function StudioRecorder() {
                         onClick={() => setCameraSize(s)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase transition ${
                           cameraSize === s
-                            ? 'bg-indigo-600 text-white'
+                            ? 'bg-yellow-400 text-black font-extrabold'
                             : 'text-gray-400 hover:text-white'
                         }`}
                       >
@@ -346,7 +405,7 @@ export function StudioRecorder() {
             {/* Start Button */}
             <div className="border-t border-gray-800 pt-6">
               <button
-                onClick={handleStart}
+                onClick={openLauncherCard}
                 className="w-full py-4 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-2xl shadow-xl hover:shadow-yellow-400/20 transition duration-200 flex items-center justify-center gap-3 text-lg"
               >
                 <Video size={24} /> Record Your Screen
@@ -357,7 +416,7 @@ export function StudioRecorder() {
           {/* Quick AI & Pro Features Info */}
           <div className="bg-gray-900/60 border border-gray-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
             <div className="space-y-4">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+              <div className="w-10 h-10 rounded-2xl bg-yellow-400/20 text-yellow-400 flex items-center justify-center border border-yellow-400/30">
                 <Sparkles size={20} />
               </div>
               <h3 className="text-lg font-bold text-white">AI-Powered Loom Clone</h3>
@@ -366,13 +425,13 @@ export function StudioRecorder() {
               </p>
               <ul className="space-y-2 text-xs text-gray-300">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 size={14} className="text-emerald-400" /> Instant chunked video upload
+                  <CheckCircle2 size={14} className="text-yellow-400" /> Instant chunked video upload
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 size={14} className="text-emerald-400" /> Word-level timestamped transcripts
+                  <CheckCircle2 size={14} className="text-yellow-400" /> Word-level timestamped transcripts
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 size={14} className="text-emerald-400" /> Edit video by editing transcript text
+                  <CheckCircle2 size={14} className="text-yellow-400" /> Edit video by editing transcript text
                 </li>
               </ul>
             </div>
@@ -389,7 +448,7 @@ export function StudioRecorder() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Download className="text-indigo-400" size={18} /> Downloadable Apps & Media Options
+                <Download className="text-yellow-400" size={18} /> Downloadable Apps & Media Options
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
                 How to use the Windows Desktop app, Chrome Extension, and downloadable HD video files.
@@ -399,14 +458,14 @@ export function StudioRecorder() {
               <a
                 href="/api/download-exe"
                 download
-                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md"
+                className="px-3.5 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 shadow-md"
               >
                 <Monitor size={14} /> Desktop App (.exe)
               </a>
               <a
                 href="/api/download-extension"
                 download
-                className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md"
+                className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-yellow-400 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md border border-yellow-400/40"
               >
                 <Download size={14} /> Extension (.zip)
               </a>
@@ -416,18 +475,18 @@ export function StudioRecorder() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
             {/* Desktop App */}
             <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
-              <div className="font-bold text-indigo-400 flex items-center gap-1.5">
+              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
                 <Monitor size={14} /> 1. Windows Desktop App (.exe)
               </div>
               <p className="text-gray-300 leading-relaxed">
-                Click <strong>Desktop App (.exe)</strong> for 1-click download. Double-click the <code className="bg-gray-800 px-1 py-0.5 rounded text-indigo-300">.exe</code> file to run natively on Windows.
+                Click <strong>Desktop App (.exe)</strong> for 1-click download. Double-click the <code className="bg-gray-800 px-1 py-0.5 rounded text-yellow-300">.exe</code> file to run natively on Windows.
               </p>
-              <div className="bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-500/20 text-[11px] text-indigo-200 space-y-1">
-                <div className="font-semibold text-indigo-300">⚡ What to Expect:</div>
+              <div className="bg-yellow-400/10 p-2.5 rounded-xl border border-yellow-400/20 text-[11px] text-yellow-200 space-y-1">
+                <div className="font-semibold text-yellow-300">⚡ What to Expect:</div>
                 <ul className="list-disc list-inside space-y-0.5 text-gray-300">
                   <li>Zero installation required (Double-click to run).</li>
                   <li>Native floating camera overlay over all Windows apps.</li>
-                  <li>Global hotkey: Press <code className="bg-gray-800 px-1 rounded text-indigo-300">Alt+Shift+R</code> anywhere to record.</li>
+                  <li>Global hotkey: Press <code className="bg-gray-800 px-1 rounded text-yellow-300">Alt+Shift+R</code> anywhere to record.</li>
                   <li>Auto-syncs recordings to Vercel cloud with live share links.</li>
                 </ul>
               </div>
@@ -435,11 +494,11 @@ export function StudioRecorder() {
 
             {/* Chrome Extension */}
             <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
-              <div className="font-bold text-purple-400 flex items-center gap-1.5">
+              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
                 <Download size={14} /> 2. Chrome Extension (.zip)
               </div>
               <p className="text-gray-300 leading-relaxed">
-                Click <strong>Extension (.zip)</strong> and unzip the folder. Open <code className="bg-gray-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono">chrome://extensions</code>, toggle <strong>Developer mode</strong> ON, click <strong>Load unpacked</strong>, and select the folder!
+                Click <strong>Extension (.zip)</strong> and unzip the folder. Open <code className="bg-gray-800 px-1.5 py-0.5 rounded text-yellow-300 font-mono">chrome://extensions</code>, toggle <strong>Developer mode</strong> ON, click <strong>Load unpacked</strong>, and select the folder!
               </p>
             </div>
 
@@ -458,15 +517,15 @@ export function StudioRecorder() {
 
       {/* Floating Live Speech Caption Ticker during Active Recording */}
       {isRecording && liveTranscript.length > 0 && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/85 border border-indigo-500/30 text-indigo-300 px-5 py-2 rounded-2xl shadow-xl backdrop-blur-md text-xs font-mono max-w-lg truncate z-50 flex items-center gap-2">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/85 border border-yellow-400/30 text-yellow-300 px-5 py-2 rounded-2xl shadow-xl backdrop-blur-md text-xs font-mono max-w-lg truncate z-50 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
           <span className="truncate">Live Speech: "{liveTranscript[liveTranscript.length - 1].text}"</span>
         </div>
       )}
 
-      {/* Floating Left Vertical Control Dock (Identical to Chrome Extension & Loom) */}
+      {/* Floating Right Vertical Control Dock (Loom Style on RIGHT SIDE) */}
       {isRecording && (
-        <div className="fixed top-1/2 -translate-y-1/2 left-4 bg-zinc-900/95 border border-zinc-700/60 text-white p-2.5 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center gap-3 z-50">
+        <div className="fixed top-1/2 -translate-y-1/2 right-4 bg-zinc-900/95 border border-zinc-700/60 text-white p-2.5 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center gap-3 z-50">
           <div className="font-mono text-xs font-bold text-yellow-400 bg-yellow-400/15 px-2 py-1 rounded-md">
             {formatTime(recordingTime)}
           </div>
@@ -559,7 +618,7 @@ export function StudioRecorder() {
         </div>
       )}
 
-      {/* Camera Bubble Preview overlay */}
+      {/* Camera Bubble Preview overlay (LEFT SIDE) */}
       {isRecording && includeCamera && (
         <CameraBubble
           stream={cameraStream}
@@ -589,7 +648,7 @@ export function StudioRecorder() {
             <div className="flex items-center gap-3">
               <button
                 onClick={resetRecorder}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-amber-400 text-sm font-semibold rounded-xl transition flex items-center gap-2 border border-gray-700"
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-yellow-400 text-sm font-semibold rounded-xl transition flex items-center gap-2 border border-gray-700"
                 title="Discard preview and record again"
               >
                 <RotateCcw size={16} /> Record Again
@@ -603,7 +662,7 @@ export function StudioRecorder() {
               <button
                 onClick={handleSimulatedUpload}
                 disabled={isUploading}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 shadow-lg"
+                className="px-5 py-2 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold disabled:opacity-50 text-sm rounded-xl transition flex items-center gap-2 shadow-lg"
               >
                 {isUploading ? (
                   <>
@@ -624,9 +683,9 @@ export function StudioRecorder() {
           </div>
 
           {uploadedVideoId && (
-            <div className="bg-indigo-500/10 border border-indigo-500/30 p-4 rounded-2xl flex items-center justify-between">
+            <div className="bg-yellow-400/10 border border-yellow-400/30 p-4 rounded-2xl flex items-center justify-between">
               <div>
-                <div className="text-sm font-semibold text-indigo-400">Shareable Video Page Ready</div>
+                <div className="text-sm font-semibold text-yellow-400">Shareable Video Page Ready</div>
                 <div className="text-xs text-gray-400 font-mono mt-0.5">
                   {typeof window !== 'undefined' ? `${window.location.origin}/v/${uploadedVideoId}` : `/v/${uploadedVideoId}`}
                 </div>
@@ -635,7 +694,7 @@ export function StudioRecorder() {
                 href={`/v/${uploadedVideoId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition"
+                className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-xs rounded-xl transition"
               >
                 Open Video Player Page →
               </a>

@@ -84,16 +84,17 @@
     });
   }
 
-  // 2. Render Left-Side Vertical Recording Control Dock (Loom Style)
-  function showLeftVerticalDock() {
-    if (document.getElementById('dnl-left-dock')) return;
+  // 2. Render Right-Side Vertical Recording Control Dock (Loom Style)
+  function showRightVerticalDock() {
+    if (document.getElementById('dnl-right-dock')) return;
 
-    leftDockEl = document.createElement('div');
-    leftDockEl.id = 'dnl-left-dock';
-    leftDockEl.style.cssText = `
+    rightDockEl = document.createElement('div');
+    rightDockEl.id = 'dnl-right-dock';
+    rightDockEl.style.cssText = `
       position: fixed;
       top: 40%;
-      left: 16px;
+      right: 16px;
+      left: auto;
       transform: translateY(-50%);
       background: #18181b;
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -109,22 +110,22 @@
       font-family: system-ui, -apple-system, sans-serif;
     `;
 
-    leftDockEl.innerHTML = `
+    rightDockEl.innerHTML = `
       <div id="dnl-timer" style="font-family:monospace;font-size:13px;font-weight:800;color:#facc15;background:rgba(250,204,21,0.15);padding:4px 8px;border-radius:8px;">00:00</div>
-      <button id="dnl-left-pause" title="Pause / Resume" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">⏸️</button>
-      <button id="dnl-left-cam-toggle" title="Toggle Camera Bubble" style="background:#27272a;border:none;color:#facc15;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">📷</button>
-      <button id="dnl-left-pen" title="Draw Pen" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">✏️</button>
-      <button id="dnl-left-trash" title="Cancel" style="background:#27272a;border:none;color:#f87171;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">🗑️</button>
-      <button id="dnl-left-finish" title="Finish Recording" style="background:#22c55e;border:none;color:white;width:40px;height:40px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(34,197,94,0.4);">✓</button>
+      <button id="dnl-right-pause" title="Pause / Resume" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">⏸️</button>
+      <button id="dnl-right-cam-toggle" title="Toggle Camera Bubble" style="background:#27272a;border:none;color:#facc15;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">📷</button>
+      <button id="dnl-right-pen" title="Draw Pen" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">✏️</button>
+      <button id="dnl-right-trash" title="Cancel" style="background:#27272a;border:none;color:#f87171;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">🗑️</button>
+      <button id="dnl-right-finish" title="Finish Recording" style="background:#22c55e;border:none;color:white;width:40px;height:40px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(34,197,94,0.4);">✓</button>
     `;
 
-    document.body.appendChild(leftDockEl);
+    document.body.appendChild(rightDockEl);
 
-    document.getElementById('dnl-left-pause').addEventListener('click', togglePause);
-    document.getElementById('dnl-left-cam-toggle').addEventListener('click', toggleCameraBubble);
-    document.getElementById('dnl-left-pen').addEventListener('click', togglePen);
-    document.getElementById('dnl-left-trash').addEventListener('click', cancelRecording);
-    document.getElementById('dnl-left-finish').addEventListener('click', stopRecordingAndUpload);
+    document.getElementById('dnl-right-pause').addEventListener('click', togglePause);
+    document.getElementById('dnl-right-cam-toggle').addEventListener('click', toggleCameraBubble);
+    document.getElementById('dnl-right-pen').addEventListener('click', togglePen);
+    document.getElementById('dnl-right-trash').addEventListener('click', cancelRecording);
+    document.getElementById('dnl-right-finish').addEventListener('click', stopRecordingAndUpload);
   }
 
   // 3. Render Bottom-Left Loom Camera Bubble with Avatar Fallback
@@ -300,7 +301,7 @@
 
   async function startRecording() {
     try {
-      showLeftVerticalDock();
+      showRightVerticalDock();
       showCameraBubble();
       setupCanvasOverlay();
 
