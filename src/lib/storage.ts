@@ -29,7 +29,32 @@ export async function uploadVideoToStorage(buffer: Buffer, filename: string): Pr
   // 1. Cache buffer in memory for instant Vercel video streaming route
   cacheVideoBuffer(cleanId, buffer);
 
-  // 2. Vercel Blob (Built-in Vercel storage if configured)
+  // 2. Supabase Storage Upload (if Supabase credentials provided)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const res = await fetch(`${supabaseUrl}/storage/v1/object/videos/${filename}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'apikey': supabaseKey,
+          'Content-Type': 'video/webm',
+          'x-upsert': 'true',
+        },
+        body: new Uint8Array(buffer),
+      });
+
+      if (res.ok) {
+        return `${supabaseUrl}/storage/v1/object/public/videos/${filename}`;
+      }
+    } catch (err) {
+      console.warn('Supabase storage upload failed:', err);
+    }
+  }
+
+  // 3. Vercel Blob (Built-in Vercel storage if configured)
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
       const blob = await put(`videos/${filename}`, buffer, {
@@ -41,7 +66,7 @@ export async function uploadVideoToStorage(buffer: Buffer, filename: string): Pr
     }
   }
 
-  // 3. Cloudflare R2 / AWS S3 Storage if credentials provided
+  // 4. Cloudflare R2 / AWS S3 Storage if credentials provided
   if (s3Client && S3_BUCKET_NAME) {
     try {
       await s3Client.send(
@@ -62,7 +87,7 @@ export async function uploadVideoToStorage(buffer: Buffer, filename: string): Pr
     }
   }
 
-  // 4. Local disk write attempt for local server
+  // 5. Local disk write attempt for local server
   try {
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     if (!fs.existsSync(uploadsDir)) {
@@ -72,6 +97,6 @@ export async function uploadVideoToStorage(buffer: Buffer, filename: string): Pr
     fs.writeFileSync(filePath, buffer);
   } catch (err) {}
 
-  // 5. Always return dynamic streaming route /api/video/stream/[id] so playback never fails
+  // 6. Always return dynamic streaming route /api/video/stream/[id] as fallback
   return `/api/video/stream/${cleanId}`;
 }
