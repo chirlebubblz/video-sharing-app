@@ -287,6 +287,41 @@ export function StudioRecorder() {
         </div>
       )}
 
+      {/* Active Recording Live Monitor Screen */}
+      {isRecording && (
+        <div className="mb-8 bg-gray-900/90 border border-yellow-400/40 rounded-3xl p-6 shadow-2xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Monitor className="text-yellow-400" size={22} /> Live Recording Monitor
+              </h2>
+              <span className="text-xs bg-red-500/20 text-red-400 font-bold px-2.5 py-0.5 rounded-full border border-red-500/40">
+                REC • {formatTime(recordingTime)}
+              </span>
+            </div>
+            <div className="text-xs text-gray-400 font-mono">
+              60fps HD • Live Stream Active
+            </div>
+          </div>
+
+          <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-gray-800 relative shadow-inner">
+            <video
+              ref={(vid) => {
+                if (vid && cameraStream) {
+                  vid.srcObject = cameraStream;
+                  vid.play().catch(() => {});
+                }
+              }}
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       {!isRecording && !previewUrl && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -128,8 +128,8 @@
     document.getElementById('dnl-right-finish').addEventListener('click', stopRecordingAndUpload);
   }
 
-  // 3. Render Bottom-Left Loom Camera Bubble with Avatar Fallback
-  function showCameraBubble() {
+  // 3. Render Bottom-Left Loom Camera Bubble with Avatar Fallback & Cam Permission Button
+  async function showCameraBubble() {
     if (document.getElementById('dnl-camera-bubble')) return;
 
     cameraBubbleEl = document.createElement('div');
@@ -155,10 +155,11 @@
     // Fallback Avatar (Winking Viking Smiley)
     const fallbackAvatar = document.createElement('div');
     fallbackAvatar.id = 'dnl-cam-fallback';
-    fallbackAvatar.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#18181b;color:#facc15;font-family:sans-serif;z-index:1;';
+    fallbackAvatar.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#18181b;color:#facc15;font-family:sans-serif;z-index:1;padding:8px;text-align:center;';
     fallbackAvatar.innerHTML = `
-      <div style="font-size:36px;margin-bottom:2px;">😉</div>
-      <div style="font-size:11px;font-weight:700;color:#e4e4e7;">Viking Cam Ready</div>
+      <div style="font-size:32px;margin-bottom:2px;">😉</div>
+      <div style="font-size:11px;font-weight:700;color:#e4e4e7;margin-bottom:4px;">Viking Cam Ready</div>
+      <button id="dnl-enable-cam-btn" style="background:#facc15;border:none;color:#000;font-size:10px;font-weight:800;padding:4px 8px;border-radius:6px;cursor:pointer;">📷 Enable Camera</button>
     `;
     cameraBubbleEl.appendChild(fallbackAvatar);
 
@@ -169,14 +170,27 @@
     video.playsInline = true;
     video.style.cssText = 'position:relative;z-index:2;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);';
 
-    video.onplaying = () => {
-      fallbackAvatar.style.display = 'none';
-    };
+    video.onloadeddata = () => { fallbackAvatar.style.display = 'none'; };
+    video.onplaying = () => { fallbackAvatar.style.display = 'none'; };
 
     cameraBubbleEl.appendChild(video);
-
     makeDraggable(cameraBubbleEl);
     document.body.appendChild(cameraBubbleEl);
+
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = cameraStream;
+      video.play().catch(() => {});
+      fallbackAvatar.style.display = 'none';
+    } catch (e) {
+      console.warn('Webcam capture notice:', e);
+      const btn = document.getElementById('dnl-enable-cam-btn');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          chrome.runtime.sendMessage({ action: 'open_permission_page' });
+        });
+      }
+    }
   }
 
   function toggleCameraBubble() {
