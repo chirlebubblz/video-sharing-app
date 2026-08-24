@@ -8,21 +8,25 @@ export default function Home() {
   const [userVideos, setUserVideos] = useState<any[]>([]);
 
   useEffect(() => {
-    // 1. Load saved user recordings from localStorage
+    // 1. Load saved user recordings from localStorage (purging old dummy videos)
     const saved = localStorage.getItem('dnl_my_videos');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setUserVideos(parsed);
+        if (Array.isArray(parsed)) {
+          const filtered = parsed.filter((v) => v.id !== 'vid-demo-1' && v.id !== 'vid-demo-2');
+          setUserVideos(filtered);
+          localStorage.setItem('dnl_my_videos', JSON.stringify(filtered));
         }
       } catch (e) {}
     }
 
     // 2. Real-time BroadcastChannel & Window postMessage sync across tabs
     const handleNewVideo = (newVid: any) => {
+      if (newVid.id === 'vid-demo-1' || newVid.id === 'vid-demo-2') return;
       setUserVideos((prev) => {
-        const updated = [newVid, ...prev.filter((v) => v.id !== newVid.id)];
+        const cleanPrev = prev.filter((v) => v.id !== 'vid-demo-1' && v.id !== 'vid-demo-2');
+        const updated = [newVid, ...cleanPrev.filter((v) => v.id !== newVid.id)];
         try {
           localStorage.setItem('dnl_my_videos', JSON.stringify(updated));
         } catch (err) {}
