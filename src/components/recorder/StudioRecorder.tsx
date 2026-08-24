@@ -130,12 +130,20 @@ export function StudioRecorder() {
               HD 60fps
             </span>
             <a
+              href="/api/download-exe"
+              download
+              className="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold px-3 py-1 rounded-full border border-indigo-500/40 transition flex items-center gap-1.5 shadow-md"
+              title="Download Windows Desktop App (.exe) for native floating overlay"
+            >
+              <Monitor size={12} /> Desktop App (.exe)
+            </a>
+            <a
               href="/api/download-extension"
               download
               className="text-xs bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold px-3 py-1 rounded-full border border-purple-500/40 transition flex items-center gap-1.5 shadow-md"
-              title="Download Chrome Extension to record floating camera over any website"
+              title="Download Chrome Extension (.zip)"
             >
-              <Download size={12} /> Chrome Extension (.zip)
+              <Download size={12} /> Extension (.zip)
             </a>
           </h1>
           <p className="text-gray-400 mt-1 text-sm">
