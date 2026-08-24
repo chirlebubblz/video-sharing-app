@@ -302,6 +302,12 @@
   function cleanupRecordingUI() {
     isRecording = false;
     clearInterval(timerInterval);
+
+    try {
+      const syncChan = new BroadcastChannel('dnl_video_sync');
+      syncChan.postMessage({ type: 'RECORDING_STOPPED' });
+    } catch (e) {}
+
     if (rightDockEl) rightDockEl.remove();
     if (cameraBubbleEl) cameraBubbleEl.remove();
     if (canvasEl) canvasEl.remove();
@@ -372,6 +378,12 @@
         mediaRecorder.start(1000);
         isRecording = true;
         startTime = Date.now();
+
+        // Broadcast recording started state to home screen monitor
+        try {
+          const syncChan = new BroadcastChannel('dnl_video_sync');
+          syncChan.postMessage({ type: 'RECORDING_STARTED' });
+        } catch (e) {}
 
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {

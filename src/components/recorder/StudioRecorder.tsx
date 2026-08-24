@@ -17,13 +17,14 @@ import {
   Pencil,
   CheckCircle2,
   Puzzle,
-  Sparkles,
+  Radio,
 } from 'lucide-react';
 
 export function StudioRecorder() {
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
+  const [isExtensionRecording, setIsExtensionRecording] = useState(false);
 
   const {
     cameraStream,
@@ -41,6 +42,21 @@ export function StudioRecorder() {
     toggleCamera,
     setBubblePosition,
   } = useScreenRecorder();
+
+  // Listen for cross-tab Extension recording start/stop events
+  useEffect(() => {
+    const channel = new BroadcastChannel('dnl_video_sync');
+    channel.onmessage = (event) => {
+      if (event.data?.type === 'RECORDING_STARTED') {
+        setIsExtensionRecording(true);
+      } else if (event.data?.type === 'RECORDING_STOPPED' || event.data?.type === 'NEW_VIDEO') {
+        setIsExtensionRecording(false);
+      }
+    };
+    return () => channel.close();
+  }, []);
+
+  const activeRecording = isRecording || isExtensionRecording;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -156,13 +172,13 @@ export function StudioRecorder() {
       <div className="bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 shadow-2xl space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
           <div className="flex items-center gap-3">
-            <span className={`w-3.5 h-3.5 rounded-full ${isRecording ? 'bg-red-500 animate-ping' : 'bg-yellow-400'}`} />
+            <span className={`w-3.5 h-3.5 rounded-full ${activeRecording ? 'bg-red-500 animate-ping' : 'bg-yellow-400'}`} />
             <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
               <Monitor className="text-yellow-400" size={24} /> Live Screen Monitor
             </h2>
-            {isRecording ? (
-              <span className="text-xs bg-red-500/20 text-red-400 font-extrabold px-3 py-1 rounded-full border border-red-500/40">
-                REC • {formatTime(recordingTime)}
+            {activeRecording ? (
+              <span className="text-xs bg-red-500/20 text-red-400 font-extrabold px-3 py-1 rounded-full border border-red-500/40 flex items-center gap-1.5">
+                <Radio size={14} className="animate-pulse text-red-500" /> LIVE STREAMING • {formatTime(recordingTime)}
               </span>
             ) : (
               <span className="text-xs bg-yellow-400/10 text-yellow-400 font-bold px-3 py-1 rounded-full border border-yellow-400/30">
@@ -177,19 +193,38 @@ export function StudioRecorder() {
 
         {/* Widescreen Display Projection Container */}
         <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden border border-zinc-800 relative shadow-2xl flex items-center justify-center">
-          {isRecording ? (
-            <video
-              ref={(vid) => {
-                if (vid && cameraStream) {
-                  vid.srcObject = cameraStream;
-                  vid.play().catch(() => {});
-                }
-              }}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-contain"
-            />
+          {activeRecording ? (
+            cameraStream ? (
+              <video
+                ref={(vid) => {
+                  if (vid && cameraStream) {
+                    vid.srcObject = cameraStream;
+                    vid.play().catch(() => {});
+                  }
+                }}
+                autoPlay
+                muted
+                playsInline
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 bg-gradient-to-b from-red-950/40 via-zinc-900 to-black">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center text-3xl animate-ping absolute inset-0" />
+                  <div className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-xl relative font-bold">
+                    🔴
+                  </div>
+                </div>
+                <div className="space-y-1.5 max-w-md">
+                  <h3 className="text-2xl font-black text-white tracking-tight flex items-center justify-center gap-2">
+                    Live Broadcast Active
+                  </h3>
+                  <p className="text-xs text-yellow-300 font-mono">
+                    Recording session in progress across browser tabs • 60fps HD
+                  </p>
+                </div>
+              </div>
+            )
           ) : previewUrl ? (
             <video src={previewUrl} controls className="w-full h-full object-contain" />
           ) : (
@@ -211,7 +246,7 @@ export function StudioRecorder() {
       </div>
 
       {/* Extension Installation & Usage Instructions */}
-      {!isRecording && !previewUrl && (
+      {!activeRecording && !previewUrl && (
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-yellow-400 text-black flex items-center justify-center font-extrabold text-2xl shrink-0 shadow-lg">
@@ -332,7 +367,7 @@ export function StudioRecorder() {
       <AnnotationCanvas active={isAnnotating} onClose={() => setIsAnnotating(false)} />
 
       {/* Recording Complete Actions (When preview is ready) */}
-      {previewUrl && !isRecording && (
+      {previewUrl && !activeRecording && (
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div>
