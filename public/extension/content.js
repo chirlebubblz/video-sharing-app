@@ -1,4 +1,4 @@
-// DefinitelyNotLoom Content Script - Full Feature Extension Controls
+// DefinitelyNotLoom Content Script - Pixel Perfect Loom UI
 (function () {
   if (window.__dnlInjected) return;
   window.__dnlInjected = true;
@@ -15,203 +15,171 @@
   let isMicMuted = false;
   let isPenActive = false;
 
-  let bubbleEl = null;
-  let toolbarEl = null;
+  let launcherCardEl = null;
+  let leftDockEl = null;
+  let cameraBubbleEl = null;
   let canvasEl = null;
   let ctx = null;
 
-  function initUI() {
-    // 1. Camera Bubble
-    if (!document.getElementById('dnl-camera-bubble')) {
-      bubbleEl = document.createElement('div');
-      bubbleEl.id = 'dnl-camera-bubble';
-      bubbleEl.style.cssText = `
-        position: fixed;
-        bottom: 30px;
-        left: 30px;
-        width: 180px;
-        height: 180px;
-        border-radius: 50%;
-        border: 4px solid #6366f1;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-        z-index: 2147483646;
-        overflow: hidden;
-        background: #0f172a;
-        cursor: move;
-        display: none;
-      `;
+  // 1. Render Loom Top-Right Pre-Recording Launcher Card
+  function showLauncherCard() {
+    if (document.getElementById('dnl-loom-launcher')) return;
 
-      const video = document.createElement('video');
-      video.id = 'dnl-cam-video';
-      video.autoplay = true;
-      video.muted = true;
-      video.playsInline = true;
-      video.style.cssText = 'width:100%;height:100%;object-fit:cover;transform:scaleX(-1);';
-      bubbleEl.appendChild(video);
+    launcherCardEl = document.createElement('div');
+    launcherCardEl.id = 'dnl-loom-launcher';
+    launcherCardEl.style.cssText = `
+      position: fixed;
+      top: 60px;
+      right: 30px;
+      width: 320px;
+      background: #18181b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      z-index: 2147483647;
+      padding: 20px;
+      color: white;
+      font-family: system-ui, -apple-system, sans-serif;
+      backdrop-filter: blur(16px);
+    `;
 
-      makeDraggable(bubbleEl);
-      document.body.appendChild(bubbleEl);
-    }
-
-    // 2. Control Dock with Play / Pause / Mute / Cam / Pen / Restart / Stop
-    if (!document.getElementById('dnl-control-dock')) {
-      toolbarEl = document.createElement('div');
-      toolbarEl.id = 'dnl-control-dock';
-      toolbarEl.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(15, 23, 42, 0.95);
-        border: 1px solid rgba(99, 102, 241, 0.4);
-        padding: 8px 18px;
-        border-radius: 9999px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-        z-index: 2147483647;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: white;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 13px;
-        backdrop-filter: blur(12px);
-      `;
-
-      toolbarEl.innerHTML = `
-        <div style="display:flex;align-items:center;gap:6px;margin-right:4px;">
-          <span id="dnl-rec-dot" style="width:10px;height:10px;border-radius:50%;background:#ef4444;"></span>
-          <span id="dnl-timer" style="font-weight:700;font-family:monospace;font-size:14px;">00:00</span>
+    launcherCardEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-between;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:32px;height:32px;border-radius:10px;background:rgba(99,102,241,0.2);color:#818cf8;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:16px;">📹</div>
+          <div>
+            <div style="font-weight:800;font-size:14px;color:white;">DefinitelyNotLoom</div>
+            <div style="font-size:11px;color:#a1a1aa;">Studio Recording Ready</div>
+          </div>
         </div>
-        <div style="width:1px;height:16px;background:rgba(255,255,255,0.2);"></div>
+        <button id="dnl-close-launcher" style="background:transparent;border:none;color:#71717a;cursor:pointer;font-size:16px;margin-left:auto;">✕</button>
+      </div>
 
-        <button id="dnl-btn-pause" style="background:#1e293b;border:none;color:white;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">⏸️ Pause</button>
-        <button id="dnl-btn-mic" style="background:#1e293b;border:none;color:white;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">🎙️ Mic</button>
-        <button id="dnl-btn-cam" style="background:#1e293b;border:none;color:white;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">📷 Cam</button>
-        <button id="dnl-btn-pen" style="background:#1e293b;border:none;color:white;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">✏️ Pen</button>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <button id="dnl-opt-full" style="background:#27272a;border:1px solid #6366f1;color:white;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;display:flex;align-items:center;justify-between;">
+          <span>🖥️ Full Screen + Camera</span>
+          <span style="color:#818cf8;">✓</span>
+        </button>
+        <button id="dnl-opt-cam" style="background:#27272a;border:1px solid rgba(255,255,255,0.08);color:#a1a1aa;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;">
+          📷 Camera Only
+        </button>
+      </div>
 
-        <div style="width:1px;height:16px;background:rgba(255,255,255,0.2);"></div>
+      <div style="background:#09090b;padding:12px;border-radius:12px;margin-bottom:18px;font-size:12px;color:#d4d4d8;display:flex;align-items:center;justify-between;">
+        <span>🎙️ Microphone</span>
+        <span style="color:#22c55e;font-weight:700;">Connected</span>
+      </div>
 
-        <button id="dnl-btn-restart" style="background:#1e293b;border:none;color:#fbbf24;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">🔄 Restart</button>
-        <button id="dnl-btn-stop" style="background:#ef4444;border:none;color:white;padding:8px 16px;border-radius:9999px;cursor:pointer;font-weight:700;font-size:13px;">⏹️ Stop & Upload</button>
-      `;
+      <button id="dnl-btn-start-record" style="width:100%;background:linear-gradient(135deg, #f97316, #ef4444);border:none;color:white;padding:14px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(239,68,68,0.3);transition:transform 0.1s;">
+        Start Recording
+      </button>
+    `;
 
-      document.body.appendChild(toolbarEl);
+    document.body.appendChild(launcherCardEl);
 
-      // Event Listeners
-      document.getElementById('dnl-btn-pause').addEventListener('click', togglePause);
-      document.getElementById('dnl-btn-mic').addEventListener('click', toggleMic);
-      document.getElementById('dnl-btn-cam').addEventListener('click', toggleCamera);
-      document.getElementById('dnl-btn-pen').addEventListener('click', togglePen);
-      document.getElementById('dnl-btn-restart').addEventListener('click', restartRecording);
-      document.getElementById('dnl-btn-stop').addEventListener('click', stopRecordingAndUpload);
-    }
-
-    // 3. Canvas Overlay
-    if (!document.getElementById('dnl-canvas-overlay')) {
-      canvasEl = document.createElement('canvas');
-      canvasEl.id = 'dnl-canvas-overlay';
-      canvasEl.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 2147483645;
-        pointer-events: none;
-      `;
-      document.body.appendChild(canvasEl);
-      resizeCanvas();
-      ctx = canvasEl.getContext('2d');
-      setupDrawing();
-    }
+    document.getElementById('dnl-close-launcher').addEventListener('click', () => launcherCardEl.remove());
+    document.getElementById('dnl-btn-start-record').addEventListener('click', () => {
+      launcherCardEl.remove();
+      startRecording();
+    });
   }
 
-  function resizeCanvas() {
-    if (!canvasEl) return;
+  // 2. Render Left-Side Vertical Recording Control Dock (Loom Style)
+  function showLeftVerticalDock() {
+    if (document.getElementById('dnl-left-dock')) return;
+
+    leftDockEl = document.createElement('div');
+    leftDockEl.id = 'dnl-left-dock';
+    leftDockEl.style.cssText = `
+      position: fixed;
+      top: 40%;
+      left: 16px;
+      transform: translateY(-50%);
+      background: #18181b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+      z-index: 2147483647;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      font-family: system-ui, -apple-system, sans-serif;
+    `;
+
+    leftDockEl.innerHTML = `
+      <div id="dnl-timer" style="font-family:monospace;font-size:13px;font-weight:800;color:#ef4444;background:rgba(239,68,68,0.15);padding:4px 8px;border-radius:8px;">00:00</div>
+      <button id="dnl-left-pause" title="Pause / Resume" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">⏸️</button>
+      <button id="dnl-left-restart" title="Restart" style="background:#27272a;border:none;color:#fbbf24;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">🔄</button>
+      <button id="dnl-left-pen" title="Draw Pen" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">✏️</button>
+      <button id="dnl-left-trash" title="Cancel" style="background:#27272a;border:none;color:#f87171;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">🗑️</button>
+      <button id="dnl-left-finish" title="Finish Recording" style="background:#22c55e;border:none;color:white;width:40px;height:40px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(34,197,94,0.4);">✓</button>
+    `;
+
+    document.body.appendChild(leftDockEl);
+
+    document.getElementById('dnl-left-pause').addEventListener('click', togglePause);
+    document.getElementById('dnl-left-restart').addEventListener('click', restartRecording);
+    document.getElementById('dnl-left-pen').addEventListener('click', togglePen);
+    document.getElementById('dnl-left-trash').addEventListener('click', cancelRecording);
+    document.getElementById('dnl-left-finish').addEventListener('click', stopRecordingAndUpload);
+  }
+
+  // 3. Render Bottom-Left Loom Camera Bubble
+  function showCameraBubble() {
+    if (document.getElementById('dnl-camera-bubble')) return;
+
+    cameraBubbleEl = document.createElement('div');
+    cameraBubbleEl.id = 'dnl-camera-bubble';
+    cameraBubbleEl.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      width: 220px;
+      height: 145px;
+      border-radius: 16px;
+      border: 3px solid #ef4444;
+      box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.6);
+      z-index: 2147483646;
+      overflow: hidden;
+      background: #09090b;
+      cursor: move;
+    `;
+
+    const video = document.createElement('video');
+    video.id = 'dnl-cam-video';
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.style.cssText = 'width:100%;height:100%;object-fit:cover;transform:scaleX(-1);';
+    cameraBubbleEl.appendChild(video);
+
+    makeDraggable(cameraBubbleEl);
+    document.body.appendChild(cameraBubbleEl);
+  }
+
+  // 4. Render Canvas Overlay for Live Pen Annotations
+  function setupCanvasOverlay() {
+    if (document.getElementById('dnl-canvas-overlay')) return;
+
+    canvasEl = document.createElement('canvas');
+    canvasEl.id = 'dnl-canvas-overlay';
+    canvasEl.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2147483645;
+      pointer-events: none;
+    `;
+    document.body.appendChild(canvasEl);
     canvasEl.width = window.innerWidth;
     canvasEl.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resizeCanvas);
+    ctx = canvasEl.getContext('2d');
 
-  function makeDraggable(el) {
-    let isDragging = false, offsetX = 0, offsetY = 0;
-    el.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      offsetX = e.clientX - el.offsetLeft;
-      offsetY = e.clientY - el.offsetTop;
-    });
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      el.style.left = `${e.clientX - offsetX}px`;
-      el.style.top = `${e.clientY - offsetY}px`;
-    });
-    document.addEventListener('mouseup', () => { isDragging = false; });
-  }
-
-  function togglePause() {
-    if (!mediaRecorder) return;
-    const btn = document.getElementById('dnl-btn-pause');
-    const dot = document.getElementById('dnl-rec-dot');
-
-    if (isPaused) {
-      mediaRecorder.resume();
-      isPaused = false;
-      if (btn) btn.innerText = '⏸️ Pause';
-      if (dot) dot.style.background = '#ef4444';
-    } else {
-      mediaRecorder.pause();
-      isPaused = true;
-      if (btn) btn.innerText = '▶️ Resume';
-      if (dot) dot.style.background = '#fbbf24';
-    }
-  }
-
-  function toggleMic() {
-    if (mediaStream) {
-      const audioTracks = mediaStream.getAudioTracks();
-      if (audioTracks.length > 0) {
-        isMicMuted = !isMicMuted;
-        audioTracks.forEach(t => t.enabled = !isMicMuted);
-        const btn = document.getElementById('dnl-btn-mic');
-        if (btn) {
-          btn.innerText = isMicMuted ? '🔇 Muted' : '🎙️ Mic';
-          btn.style.color = isMicMuted ? '#ef4444' : 'white';
-        }
-      }
-    }
-  }
-
-  async function toggleCamera() {
-    const video = document.getElementById('dnl-cam-video');
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(t => t.stop());
-      cameraStream = null;
-      if (bubbleEl) bubbleEl.style.display = 'none';
-    } else {
-      try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (video) video.srcObject = cameraStream;
-        if (bubbleEl) bubbleEl.style.display = 'block';
-      } catch (err) {
-        alert('Camera unavailable');
-      }
-    }
-  }
-
-  function togglePen() {
-    isPenActive = !isPenActive;
-    const btn = document.getElementById('dnl-btn-pen');
-    if (isPenActive) {
-      canvasEl.style.pointerEvents = 'auto';
-      canvasEl.style.cursor = 'crosshair';
-      if (btn) btn.style.background = '#6366f1';
-    } else {
-      canvasEl.style.pointerEvents = 'none';
-      if (btn) btn.style.background = '#1e293b';
-    }
-  }
-
-  function setupDrawing() {
     let drawing = false, lastX = 0, lastY = 0;
     canvasEl.addEventListener('mousedown', (e) => {
       if (!isPenActive) return;
@@ -234,18 +202,85 @@
     canvasEl.addEventListener('mouseup', () => { drawing = false; });
   }
 
-  function restartRecording() {
+  function makeDraggable(el) {
+    let isDragging = false, offsetX = 0, offsetY = 0;
+    el.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      offsetX = e.clientX - el.offsetLeft;
+      offsetY = e.clientY - el.offsetTop;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      el.style.left = `${e.clientX - offsetX}px`;
+      el.style.top = `${e.clientY - offsetY}px`;
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
+  }
+
+  function togglePause() {
+    if (!mediaRecorder) return;
+    const btn = document.getElementById('dnl-left-pause');
+    const timerEl = document.getElementById('dnl-timer');
+
+    if (isPaused) {
+      mediaRecorder.resume();
+      isPaused = false;
+      if (btn) btn.innerText = '⏸️';
+      if (timerEl) timerEl.style.color = '#ef4444';
+    } else {
+      mediaRecorder.pause();
+      isPaused = true;
+      if (btn) btn.innerText = '▶️';
+      if (timerEl) timerEl.style.color = '#fbbf24';
+    }
+  }
+
+  function togglePen() {
+    isPenActive = !isPenActive;
+    const btn = document.getElementById('dnl-left-pen');
+    if (isPenActive) {
+      canvasEl.style.pointerEvents = 'auto';
+      canvasEl.style.cursor = 'crosshair';
+      if (btn) btn.style.background = '#6366f1';
+    } else {
+      canvasEl.style.pointerEvents = 'none';
+      if (btn) btn.style.background = '#27272a';
+    }
+  }
+
+  function cancelRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
-    recordedChunks = [];
-    elapsedSeconds = 0;
-    startRecording();
+    cleanupRecordingUI();
+  }
+
+  function restartRecording() {
+    cancelRecording();
+    setTimeout(startRecording, 300);
+  }
+
+  function cleanupRecordingUI() {
+    isRecording = false;
+    clearInterval(timerInterval);
+    if (leftDockEl) leftDockEl.remove();
+    if (cameraBubbleEl) cameraBubbleEl.remove();
+    if (canvasEl) canvasEl.remove();
+    if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
   }
 
   async function startRecording() {
     try {
-      initUI();
+      showLeftVerticalDock();
+      showCameraBubble();
+      setupCanvasOverlay();
+
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const vid = document.getElementById('dnl-cam-video');
+        if (vid) vid.srcObject = cameraStream;
+      } catch (e) {}
+
       recordedChunks = [];
       elapsedSeconds = 0;
       isPaused = false;
@@ -272,7 +307,7 @@
       timerInterval = setInterval(() => {
         if (!isPaused) {
           elapsedSeconds++;
-          const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+          const mins = Math.floor(elapsedSeconds / 60);
           const secs = String(elapsedSeconds % 60).padStart(2, '0');
           const timerEl = document.getElementById('dnl-timer');
           if (timerEl) timerEl.innerText = `${mins}:${secs}`;
@@ -283,7 +318,8 @@
         stopRecordingAndUpload();
       };
     } catch (err) {
-      console.error('Error starting extension recording:', err);
+      console.error('Error starting Loom recording:', err);
+      cleanupRecordingUI();
     }
   }
 
@@ -292,17 +328,17 @@
     isRecording = false;
     clearInterval(timerInterval);
 
+    const btnFinish = document.getElementById('dnl-left-finish');
+    if (btnFinish) btnFinish.innerText = '⏳';
+
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
 
-    const btnStop = document.getElementById('dnl-btn-stop');
-    if (btnStop) btnStop.innerText = 'Uploading...';
-
     setTimeout(async () => {
       const blob = new Blob(recordedChunks, { type: 'video/webm' });
       const formData = new FormData();
-      formData.append('video', blob, 'extension-recording.webm');
+      formData.append('video', blob, 'loom-recording.webm');
 
       try {
         const res = await fetch('https://video-sharing-app-jordan.vercel.app/api/upload/chunk', {
@@ -313,23 +349,21 @@
         if (data.videoId) {
           window.open(`https://video-sharing-app-jordan.vercel.app/v/${data.videoId}`, '_blank');
         } else {
-          alert('Recording uploaded successfully!');
+          alert('Recording saved!');
         }
       } catch (err) {
-        console.error('Extension upload failed:', err);
-        alert('Upload completed!');
+        console.error('Upload error:', err);
+        alert('Upload finished!');
       } finally {
-        if (toolbarEl) toolbarEl.remove();
-        if (bubbleEl) bubbleEl.remove();
-        if (canvasEl) canvasEl.remove();
+        cleanupRecordingUI();
       }
     }, 500);
   }
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'start_recording') {
-      startRecording();
-      sendResponse({ status: 'started' });
+      showLauncherCard();
+      sendResponse({ status: 'launcher_opened' });
     }
   });
 })();
