@@ -6,11 +6,10 @@ import { InteractiveTranscript } from '@/components/player/InteractiveTranscript
 import { TranscriptVideoEditor } from '@/components/editor/TranscriptVideoEditor';
 import { TimestampedComments } from '@/components/comments/TimestampedComments';
 import { VideoAnalytics } from '@/components/analytics/VideoAnalytics';
-import { processVideoWithAI, TranscriptSegment } from '@/lib/ai/transcription';
+import { TranscriptSegment } from '@/lib/ai/transcription';
 import { generateSrtContent, generateTxtContent, downloadFile } from '@/lib/transcriptExporter';
 import {
   Sparkles,
-  Share2,
   CheckCircle2,
   Copy,
   MessageSquare,
@@ -20,6 +19,7 @@ import {
   Download,
   FileText,
   FileCode,
+  ArrowLeft,
 } from 'lucide-react';
 
 export default function VideoPage({ params }: { params: { id: string } }) {
@@ -73,7 +73,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
           summary: '• Recorded speech & AI intelligence session.',
           actionItems: ['Review recording session'],
           chapters: [{ time: 0, title: 'Video Recording' }],
-          videoUrl: `/uploads/${videoId}.webm`,
+          videoUrl: `/api/video/stream/${videoId}`,
           transcripts: [],
         });
       });
@@ -82,18 +82,13 @@ export default function VideoPage({ params }: { params: { id: string } }) {
   const handleDownloadSrt = () => {
     if (!aiData) return;
     const content = generateSrtContent(aiData.transcripts);
-    downloadFile(content, `${aiData.title.toLowerCase().replace(/[^a-z0-0]+/g, '-')}.srt`, 'text/plain');
+    downloadFile(content, `${aiData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.srt`, 'text/plain');
   };
 
   const handleDownloadTxt = () => {
     if (!aiData) return;
     const content = generateTxtContent(aiData.title, aiData.summary, aiData.transcripts);
-    downloadFile(content, `${aiData.title.toLowerCase().replace(/[^a-z0-0]+/g, '-')}-transcript.txt`, 'text/plain');
-  };
-
-  const handleDownloadAll = () => {
-    handleDownloadTxt();
-    handleDownloadSrt();
+    downloadFile(content, `${aiData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-transcript.txt`, 'text/plain');
   };
 
   const handleCopyLink = () => {
@@ -104,58 +99,64 @@ export default function VideoPage({ params }: { params: { id: string } }) {
 
   if (!aiData) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center space-y-4">
-        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-400 text-sm">Generating AI Transcriptions & Intelligence...</p>
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+        <p className="text-zinc-400 text-sm font-medium">Generating AI Transcriptions & Intelligence...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f17] text-white">
+    <div className="min-h-screen bg-black text-white">
       {/* Navbar */}
-      <header className="border-b border-gray-800 bg-gray-900/60 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight">
-            <img src="/icon.svg" alt="Viking Smiley Logo" className="w-7 h-7 shrink-0 drop-shadow" />
-            <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
-              DefinitelyNotLoom
-            </span>
-          </a>
+      <header className="border-b border-zinc-800 bg-black/90 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <a href="/" className="p-2 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-zinc-300 transition" title="Back to Home Studio">
+              <ArrowLeft size={18} />
+            </a>
+            <a href="/" className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight">
+              <img src="/icon.svg" alt="Viking Smiley Logo" className="w-8 h-8 shrink-0 drop-shadow" />
+              <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
+                DefinitelyNotLoom
+              </span>
+            </a>
+          </div>
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 if (!aiData?.videoUrl) return;
                 const a = document.createElement('a');
                 a.href = aiData.videoUrl;
-                a.download = `${aiData.title.toLowerCase().replace(/[^a-z0-0]+/g, '-')}.webm`;
+                a.download = `${aiData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.webm`;
                 a.target = '_blank';
                 a.click();
               }}
-              className="px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 shadow-md"
+              className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-md"
               title="Download raw HD video file"
             >
-              <Download size={14} className="text-emerald-400" /> Download Video (.webm)
+              <Download size={15} /> Download Video (.webm)
             </button>
             <button
               onClick={handleDownloadTxt}
-              className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border border-gray-700"
+              className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border border-zinc-800"
               title="Save formatted transcript text"
             >
-              <FileText size={14} className="text-indigo-400" /> Save Transcript (.txt)
+              <FileText size={14} className="text-yellow-400" /> Save Transcript (.txt)
             </button>
             <button
               onClick={handleDownloadSrt}
-              className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border border-gray-700"
+              className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border border-zinc-800"
               title="Save SubRip subtitle captions"
             >
-              <FileCode size={14} className="text-purple-400" /> Subtitles (.srt)
+              <FileCode size={14} className="text-yellow-400" /> Subtitles (.srt)
             </button>
             <button
               onClick={handleCopyLink}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow-lg"
+              className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-extrabold rounded-xl transition flex items-center gap-2 shadow-lg"
             >
-              {copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+              {copied ? <CheckCircle2 size={15} /> : <Copy size={15} />}
               {copied ? 'Link Copied!' : 'Copy Share Link'}
             </button>
           </div>
@@ -164,14 +165,14 @@ export default function VideoPage({ params }: { params: { id: string } }) {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        {/* Video Title & Actions */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+        {/* Video Title & Metadata */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white">{aiData.title}</h1>
-            <p className="text-xs text-gray-400 mt-1">
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">{aiData.title}</h1>
+            <p className="text-xs text-zinc-400 mt-1 font-medium">
               Recorded with DefinitelyNotLoom Studio • 60fps HD • {aiData.viewsCount || 1} {aiData.viewsCount === 1 ? 'View' : 'Views'}
             </p>
- </div>
+          </div>
         </div>
 
         {/* Player & Sidebar Layout */}
@@ -179,7 +180,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
           {/* Left Column: Player & AI Executive Summary */}
           <div className="lg:col-span-2 space-y-6">
             <VideoPlayer
-              src={aiData.videoUrl || `/uploads/${videoId}.webm`}
+              src={aiData.videoUrl || `/api/video/stream/${videoId}`}
               chapters={aiData.chapters}
               currentTime={currentTime}
               onTimeUpdate={setCurrentTime}
@@ -187,24 +188,24 @@ export default function VideoPage({ params }: { params: { id: string } }) {
             />
 
             {/* AI Executive Summary Card */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 shadow-xl space-y-4">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Sparkles className="text-indigo-400" size={18} /> AI Executive Summary
+                <Sparkles className="text-yellow-400" size={18} /> AI Executive Summary
               </h3>
-              <div className="text-sm text-gray-300 whitespace-pre-line leading-relaxed bg-gray-950/50 p-4 rounded-2xl border border-gray-800">
+              <div className="text-sm text-zinc-300 whitespace-pre-line leading-relaxed bg-black/80 p-4 rounded-2xl border border-zinc-800">
                 {aiData.summary}
               </div>
 
               {/* Action Items */}
               {aiData.actionItems.length > 0 && (
                 <div className="space-y-2 pt-2">
-                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <ListChecks size={14} className="text-emerald-400" /> Key Action Items
+                  <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <ListChecks size={14} className="text-yellow-400" /> Key Action Items
                   </h4>
                   <ul className="space-y-2">
                     {aiData.actionItems.map((item, i) => (
-                      <li key={i} className="flex items-center gap-2 text-xs text-gray-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <li key={i} className="flex items-center gap-2 text-xs text-zinc-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
                         {item}
                       </li>
                     ))}
@@ -217,11 +218,11 @@ export default function VideoPage({ params }: { params: { id: string } }) {
           {/* Right Column: Tabbed Interactive Features */}
           <div className="space-y-4">
             {/* Tabs Bar */}
-            <div className="grid grid-cols-4 gap-1 bg-gray-900 border border-gray-800 p-1 rounded-2xl text-xs font-semibold">
+            <div className="grid grid-cols-4 gap-1 bg-zinc-900 border border-zinc-800 p-1.5 rounded-2xl text-xs font-bold">
               <button
                 onClick={() => setActiveTab('transcript')}
                 className={`py-2 rounded-xl transition flex flex-col items-center gap-1 ${
-                  activeTab === 'transcript' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                  activeTab === 'transcript' ? 'bg-yellow-400 text-black font-extrabold shadow' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <Sparkles size={14} /> Transcript
@@ -229,7 +230,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
               <button
                 onClick={() => setActiveTab('editor')}
                 className={`py-2 rounded-xl transition flex flex-col items-center gap-1 ${
-                  activeTab === 'editor' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                  activeTab === 'editor' ? 'bg-yellow-400 text-black font-extrabold shadow' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <Scissors size={14} /> AI Trim
@@ -237,7 +238,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
               <button
                 onClick={() => setActiveTab('comments')}
                 className={`py-2 rounded-xl transition flex flex-col items-center gap-1 ${
-                  activeTab === 'comments' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                  activeTab === 'comments' ? 'bg-yellow-400 text-black font-extrabold shadow' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <MessageSquare size={14} /> Comments
@@ -245,7 +246,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
               <button
                 onClick={() => setActiveTab('analytics')}
                 className={`py-2 rounded-xl transition flex flex-col items-center gap-1 ${
-                  activeTab === 'analytics' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                  activeTab === 'analytics' ? 'bg-yellow-400 text-black font-extrabold shadow' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <BarChart2 size={14} /> Stats
