@@ -464,6 +464,50 @@ export function StudioRecorder() {
         </div>
       )}
 
+      {/* Floating Left Vertical Control Dock (Identical to Chrome Extension & Loom) */}
+      {isRecording && (
+        <div className="fixed top-1/2 -translate-y-1/2 left-4 bg-zinc-900/95 border border-zinc-700/60 text-white p-2.5 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center gap-3 z-50">
+          <div className="font-mono text-xs font-bold text-yellow-400 bg-yellow-400/15 px-2 py-1 rounded-md">
+            {formatTime(recordingTime)}
+          </div>
+          <button
+            onClick={isPaused ? resumeRecording : pauseRecording}
+            className="w-9 h-9 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex items-center justify-center text-white transition"
+            title={isPaused ? 'Resume' : 'Pause'}
+          >
+            {isPaused ? <Play size={16} /> : <Pause size={16} />}
+          </button>
+          <button
+            onClick={toggleCamera}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition ${isCameraOff ? 'bg-red-500/20 text-red-400' : 'bg-zinc-800 hover:bg-zinc-700 text-yellow-400'}`}
+            title="Toggle Camera"
+          >
+            <Video size={16} />
+          </button>
+          <button
+            onClick={() => setIsAnnotating(!isAnnotating)}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition ${isAnnotating ? 'bg-yellow-400 text-black font-bold' : 'bg-zinc-800 hover:bg-zinc-700 text-white'}`}
+            title="Toggle Pen Draw Tool"
+          >
+            <Pencil size={16} />
+          </button>
+          <button
+            onClick={resetRecorder}
+            className="w-9 h-9 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex items-center justify-center text-red-400 transition"
+            title="Cancel Recording"
+          >
+            <RotateCcw size={16} />
+          </button>
+          <button
+            onClick={stopRecording}
+            className="w-10 h-10 bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold rounded-xl flex items-center justify-center transition shadow-lg shadow-emerald-500/30 text-lg"
+            title="Finish & Upload"
+          >
+            ✓
+          </button>
+        </div>
+      )}
+
       {/* Floating Canvas Controls during Active Recording */}
       {isRecording && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 border border-gray-800 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-xl flex items-center space-x-6 z-50">
@@ -481,7 +525,7 @@ export function StudioRecorder() {
                 <div
                   style={{ height: `${Math.max(15, audioLevel)}%` }}
                   className={`w-full rounded-sm transition-all duration-75 ${
-                    audioLevel > 60 ? 'bg-red-500' : audioLevel > 20 ? 'bg-emerald-400' : 'bg-indigo-400'
+                    audioLevel > 60 ? 'bg-red-500' : audioLevel > 20 ? 'bg-emerald-400' : 'bg-yellow-400'
                   }`}
                 />
               </div>
@@ -498,7 +542,7 @@ export function StudioRecorder() {
 
           <button
             onClick={() => setIsAnnotating(!isAnnotating)}
-            className={`p-3 rounded-full transition ${isAnnotating ? 'bg-indigo-600 text-white' : 'bg-gray-800 hover:bg-gray-700'}`}
+            className={`p-3 rounded-full transition ${isAnnotating ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700'}`}
             title="Toggle Live Draw & Annotate"
           >
             <Pencil size={20} />
