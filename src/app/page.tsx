@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { StudioRecorder } from '@/components/recorder/StudioRecorder';
-import { Video, Play, Clock, Eye, Zap } from 'lucide-react';
+import { Video, Play, Clock, Eye, Sparkles } from 'lucide-react';
 
 export default function Home() {
   const [userVideos, setUserVideos] = useState<any[]>([
     {
       id: 'vid-demo-1',
-      title: 'Loom+ Product Walkthrough & Feature Demo',
+      title: 'Quick Product Walkthrough & Feature Tour',
       duration: '0:32',
       views: 42,
       createdAt: '10 mins ago',
@@ -16,7 +16,7 @@ export default function Home() {
     },
     {
       id: 'vid-demo-2',
-      title: 'AI Transcript-Driven Video Editing Test',
+      title: 'AI Transcript-Driven Video Editing Demo',
       duration: '1:15',
       views: 18,
       createdAt: '2 hours ago',
@@ -40,7 +40,7 @@ export default function Home() {
       } catch (e) {}
     }
 
-    // 2. Real-time BroadcastChannel sync across tabs (Extension -> Home Display Hub)
+    // 2. Real-time BroadcastChannel sync across tabs (Extension -> Home Screen)
     const channel = new BroadcastChannel('dnl_video_sync');
     channel.onmessage = (e) => {
       if (e.data && e.data.type === 'NEW_VIDEO' && e.data.video) {
@@ -68,20 +68,20 @@ export default function Home() {
             <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
               DefinitelyNotLoom
             </span>
-            <span className="text-[10px] text-zinc-400 font-mono italic hidden sm:inline">
-              (Live Control & Recording Monitor Hub)
+            <span className="text-[11px] text-zinc-400 font-medium hidden sm:inline">
+              Say it with a video, skip the meeting 💬
             </span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-semibold">
-            <span className="flex items-center gap-1.5 text-yellow-400 bg-yellow-400/10 px-3 py-1.5 rounded-full border border-yellow-400/30">
-              <Zap size={14} /> Extension Recording Engine Active
+            <span className="flex items-center gap-1.5 text-yellow-400 bg-yellow-400/10 px-3.5 py-1.5 rounded-full border border-yellow-400/30">
+              <Sparkles size={14} /> Ready to record
             </span>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section: Widescreen Studio Display Monitor */}
+      {/* Hero Section: Studio Recorder Component */}
       <section className="py-6">
         <StudioRecorder />
       </section>
@@ -91,9 +91,9 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Video className="text-yellow-400" size={22} /> Your Video Library
+              <Video className="text-yellow-400" size={22} /> Your Recent Videos
             </h2>
-            <p className="text-xs text-zinc-400 mt-1">Instant videos recorded via Chrome Extension or Desktop App.</p>
+            <p className="text-xs text-zinc-400 mt-1">Revisit, share, or watch your previous screen recordings.</p>
           </div>
         </div>
 
