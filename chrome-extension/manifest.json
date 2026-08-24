@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "DefinitelyNotLoom Floating Screen Recorder",
+  "version": "1.0.0",
+  "description": "Floating camera bubble, drawing pen, and real-time screen recorder over all websites.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "desktopCapture"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DefinitelyNotLoom Recorder"
+  }
+}
