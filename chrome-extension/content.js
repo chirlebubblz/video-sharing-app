@@ -1,4 +1,4 @@
-// DefinitelyNotLoom Content Script - Pixel Perfect Loom UI with Winking Viking Avatar Fallback
+// DefinitelyNotLoom Content Script - Loom UI with Async MediaRecorder.onstop Upload Engine
 (function () {
   if (window.__dnlInjected) return;
   window.__dnlInjected = true;
@@ -385,6 +385,7 @@
     }
   }
 
+  // Async MediaRecorder.onstop Upload Engine
   async function stopRecordingAndUpload() {
     if (!isRecording) return;
     isRecording = false;
@@ -393,11 +394,12 @@
     const btnFinish = document.getElementById('dnl-left-finish');
     if (btnFinish) btnFinish.innerText = '⏳';
 
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
+    if (!mediaRecorder) {
+      cleanupRecordingUI();
+      return;
     }
 
-    setTimeout(async () => {
+    mediaRecorder.onstop = async () => {
       const blob = new Blob(recordedChunks, { type: 'video/webm' });
       const formData = new FormData();
       formData.append('video', blob, 'loom-recording.webm');
@@ -418,13 +420,20 @@
             thumbnail: 'bg-gradient-to-tr from-yellow-950 via-zinc-900 to-black',
           };
 
-          // 1. Real-time broadcast to control screen if open in another tab
+          // 1. Save to chrome.storage.local
+          chrome.storage.local.get(['my_videos'], (result) => {
+            const existing = result.my_videos || [];
+            const updated = [videoObj, ...existing];
+            chrome.storage.local.set({ my_videos: updated, latest_video_id: data.videoId });
+          });
+
+          // 2. Real-time broadcast to control screen if open in another tab
           try {
             const channel = new BroadcastChannel('dnl_video_sync');
             channel.postMessage({ type: 'NEW_VIDEO', video: videoObj });
-          } catch(e) {}
+          } catch (e) {}
 
-          // 2. Open shareable video page in a new tab
+          // 3. Open shareable video page in a new tab
           window.open(`https://video-sharing-app-jordan.vercel.app/v/${data.videoId}`, '_blank');
         } else {
           alert('Recording saved!');
@@ -435,7 +444,11 @@
       } finally {
         cleanupRecordingUI();
       }
-    }, 500);
+    };
+
+    if (mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
   }
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
