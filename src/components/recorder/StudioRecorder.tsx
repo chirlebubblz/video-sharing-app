@@ -16,10 +16,6 @@ import {
   RefreshCw,
   Pencil,
   CheckCircle2,
-  Mic,
-  MicOff,
-  Sparkles,
-  Layers,
   Puzzle,
 } from 'lucide-react';
 
@@ -38,13 +34,10 @@ export function StudioRecorder() {
     liveTranscript,
     isMicMuted,
     isCameraOff,
-    audioLevel,
     pauseRecording,
     resumeRecording,
     stopRecording,
-    restartRecording,
     resetRecorder,
-    toggleMuteMic,
     toggleCamera,
     setBubblePosition,
   } = useScreenRecorder();
@@ -143,7 +136,7 @@ export function StudioRecorder() {
             </span>
           </h1>
           <p className="text-zinc-400 mt-1 text-xs font-medium">
-            Download the Chrome Extension to record any tab within the same browser window. This home screen will display your live recording stream.
+            Record any screen or tab using your Chrome Extension. Your live stream will project on the monitor below.
           </p>
         </div>
 
@@ -159,12 +152,70 @@ export function StudioRecorder() {
         </div>
       </div>
 
-      {/* Extension Installation & Usage Instructions (Shown when idle) */}
+      {/* BIG WIDESCREEN LIVE RECORDING MONITOR (Front & Center) */}
+      <div className="bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+          <div className="flex items-center gap-3">
+            <span className={`w-3.5 h-3.5 rounded-full ${isRecording ? 'bg-red-500 animate-ping' : 'bg-yellow-400'}`} />
+            <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+              <Monitor className="text-yellow-400" size={24} /> Live Widescreen Monitor
+            </h2>
+            {isRecording ? (
+              <span className="text-xs bg-red-500/20 text-red-400 font-extrabold px-3 py-1 rounded-full border border-red-500/40">
+                REC • {formatTime(recordingTime)}
+              </span>
+            ) : (
+              <span className="text-xs bg-yellow-400/10 text-yellow-400 font-bold px-3 py-1 rounded-full border border-yellow-400/30">
+                Studio Ready
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-zinc-400 font-mono">
+            60fps HD • Extension Stream Projection Hub
+          </div>
+        </div>
+
+        {/* Widescreen Display Projection Container */}
+        <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden border border-zinc-800 relative shadow-2xl flex items-center justify-center">
+          {isRecording ? (
+            <video
+              ref={(vid) => {
+                if (vid && cameraStream) {
+                  vid.srcObject = cameraStream;
+                  vid.play().catch(() => {});
+                }
+              }}
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-full object-contain"
+            />
+          ) : previewUrl ? (
+            <video src={previewUrl} controls className="w-full h-full object-contain" />
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 bg-gradient-to-b from-zinc-900/60 to-black">
+              <div className="w-20 h-20 rounded-3xl bg-yellow-400/10 text-yellow-400 border border-yellow-400/30 flex items-center justify-center text-4xl shadow-xl animate-pulse">
+                😉
+              </div>
+              <div className="space-y-1.5 max-w-md">
+                <h3 className="text-2xl font-black text-white tracking-tight">
+                  Your Live Recording Will Stream Here
+                </h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Start recording using your <span className="text-yellow-400 font-bold">DefinitelyNotLoom Chrome Extension</span> to project your screen & camera live onto this widescreen monitor.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Extension Installation & Usage Instructions */}
       {!isRecording && !previewUrl && (
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-yellow-400 text-black flex items-center justify-center font-extrabold text-2xl shrink-0 shadow-lg">
-              😉
+              🧩
             </div>
             <div className="space-y-1">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -184,7 +235,7 @@ export function StudioRecorder() {
                 Download & Install Extension
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                Click <strong>Download Extension (.zip)</strong> above & unzip the folder. Open <code className="bg-zinc-800 text-yellow-300 px-1.5 py-0.5 rounded font-mono">chrome://extensions</code> in Chrome, turn ON <strong>Developer mode</strong> (top right), click <strong>Load unpacked</strong>, and select the unzipped folder!
+                Click <strong>Download Extension (.zip)</strong> above & unzip the folder. Open <code className="bg-zinc-800 text-yellow-300 px-1.5 py-0.5 rounded font-mono">chrome://extensions</code>, turn ON <strong>Developer mode</strong>, click <strong>Load unpacked</strong>, and select the folder!
               </p>
             </div>
 
@@ -195,7 +246,7 @@ export function StudioRecorder() {
                 Record Any Tab in Same Window
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                Click your <strong>DefinitelyNotLoom Extension icon</strong> in the Chrome toolbar. Ensure the target tab (Gmail, GitHub, Docs, etc.) is open within the <strong>same browser window</strong>, and hit <strong>Record Your Screen</strong>!
+                Click your <strong>DefinitelyNotLoom Extension icon</strong> in the Chrome toolbar. Open any target tab (Gmail, GitHub, Docs, etc.) within the <strong>same browser window</strong>, and hit <strong>Record Your Screen</strong>!
               </p>
             </div>
 
@@ -203,47 +254,12 @@ export function StudioRecorder() {
             <div className="bg-black/80 p-5 rounded-2xl border border-zinc-800 space-y-2">
               <div className="font-extrabold text-yellow-400 flex items-center gap-2 text-sm">
                 <span className="w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center font-black text-xs">3</span>
-                Right Dock & Live Hub
+                Floating Controls & Live Projection
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                Use the <strong>Right-Side Floating Control Dock</strong> over your target tab while this home screen monitors your live HD recording stream in real-time.
+                Use the <strong>Right-Side Floating Control Dock</strong> over your target tab while the widescreen monitor above streams your recording live in real-time.
               </p>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cinematic Live Screen Recording Widescreen Monitor */}
-      {isRecording && (
-        <div className="bg-black border border-yellow-400/50 rounded-3xl p-6 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="w-3.5 h-3.5 rounded-full bg-red-500 animate-ping" />
-              <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
-                <Monitor className="text-yellow-400" size={24} /> Live Widescreen Monitor
-              </h2>
-              <span className="text-xs bg-red-500/20 text-red-400 font-extrabold px-3 py-1 rounded-full border border-red-500/40">
-                REC • {formatTime(recordingTime)}
-              </span>
-            </div>
-            <div className="text-xs text-zinc-400 font-mono">
-              60fps HD • Live Extension Stream Active
-            </div>
-          </div>
-
-          <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden border border-zinc-800 relative shadow-2xl">
-            <video
-              ref={(vid) => {
-                if (vid && cameraStream) {
-                  vid.srcObject = cameraStream;
-                  vid.play().catch(() => {});
-                }
-              }}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-contain"
-            />
           </div>
         </div>
       )}
@@ -315,16 +331,16 @@ export function StudioRecorder() {
       {/* Live Screen Annotation Canvas */}
       <AnnotationCanvas active={isAnnotating} onClose={() => setIsAnnotating(false)} />
 
-      {/* Recording Complete & Instant Preview Player */}
+      {/* Recording Complete Actions (When preview is ready) */}
       {previewUrl && !isRecording && (
-        <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-6">
+        <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <CheckCircle2 className="text-emerald-400" size={22} /> Recording Ready!
+                <CheckCircle2 className="text-emerald-400" size={22} /> Recording Complete!
               </h2>
               <p className="text-xs text-zinc-400 mt-1">
-                Your video was recorded and composited in real time.
+                Your video is projected on the widescreen monitor above.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -357,11 +373,6 @@ export function StudioRecorder() {
                 )}
               </button>
             </div>
-          </div>
-
-          {/* Player Container */}
-          <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-zinc-800 relative">
-            <video src={previewUrl} controls className="w-full h-full object-contain" />
           </div>
 
           {uploadedVideoId && (
