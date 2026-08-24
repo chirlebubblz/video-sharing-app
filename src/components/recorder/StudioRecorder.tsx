@@ -19,7 +19,8 @@ import {
   Mic,
   MicOff,
   Sparkles,
-  Info,
+  Layers,
+  Puzzle,
 } from 'lucide-react';
 
 export function StudioRecorder() {
@@ -142,31 +143,23 @@ export function StudioRecorder() {
             </span>
           </h1>
           <p className="text-zinc-400 mt-1 text-xs font-medium">
-            Use the Chrome Extension toolbar icon to record any tab in the same window. The monitor below shows your live recording.
+            Download the Chrome Extension to record any tab within the same browser window. This home screen will display your live recording stream.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <a
-            href="/api/download-exe"
-            download
-            className="text-xs bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-3 py-1.5 rounded-xl border border-yellow-300 transition flex items-center gap-1.5 shadow-md"
-            title="Download Windows Desktop App (.exe)"
-          >
-            <Monitor size={14} /> Desktop App (.exe)
-          </a>
-          <a
             href="/api/download-extension"
             download
-            className="text-xs bg-zinc-900 hover:bg-zinc-800 text-yellow-400 font-bold px-3 py-1.5 rounded-xl border border-yellow-400/40 transition flex items-center gap-1.5 shadow-md"
+            className="text-xs bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-lg"
             title="Download Chrome Extension (.zip)"
           >
-            <Download size={14} /> Extension (.zip)
+            <Puzzle size={16} /> Download Extension (.zip)
           </a>
         </div>
       </div>
 
-      {/* Primary Instructions Card (Shown when idle) */}
+      {/* Extension Installation & Usage Instructions (Shown when idle) */}
       {!isRecording && !previewUrl && (
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-6">
           <div className="flex items-start gap-4">
@@ -175,42 +168,45 @@ export function StudioRecorder() {
             </div>
             <div className="space-y-1">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                How to Record Any Tab or Screen
+                Chrome Extension Setup & Recording Guide
               </h2>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Click your <strong>DefinitelyNotLoom Extension</strong> toolbar icon on any tab within the same browser window to launch the floating recorder.
+                Follow these 3 easy steps to install the browser extension and record any screen or tab in the same window.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div className="bg-black/60 p-4 rounded-2xl border border-zinc-800 space-y-1.5">
-              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-yellow-400 text-black flex items-center justify-center font-extrabold text-xs">1</span>
-                Open Extension
+            {/* Step 1 */}
+            <div className="bg-black/80 p-5 rounded-2xl border border-zinc-800 space-y-2">
+              <div className="font-extrabold text-yellow-400 flex items-center gap-2 text-sm">
+                <span className="w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center font-black text-xs">1</span>
+                Download & Install Extension
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                Click the <strong>DefinitelyNotLoom Extension icon</strong> in your browser toolbar (top right).
+                Click <strong>Download Extension (.zip)</strong> above & unzip the folder. Open <code className="bg-zinc-800 text-yellow-300 px-1.5 py-0.5 rounded font-mono">chrome://extensions</code> in Chrome, turn ON <strong>Developer mode</strong> (top right), click <strong>Load unpacked</strong>, and select the unzipped folder!
               </p>
             </div>
 
-            <div className="bg-black/60 p-4 rounded-2xl border border-zinc-800 space-y-1.5">
-              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-yellow-400 text-black flex items-center justify-center font-extrabold text-xs">2</span>
-                Select Same-Window Tab
+            {/* Step 2 */}
+            <div className="bg-black/80 p-5 rounded-2xl border border-zinc-800 space-y-2">
+              <div className="font-extrabold text-yellow-400 flex items-center gap-2 text-sm">
+                <span className="w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center font-black text-xs">2</span>
+                Record Any Tab in Same Window
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                Choose <strong>Full Screen + Camera</strong> or <strong>Camera Only</strong> for any tab inside your browser window.
+                Click your <strong>DefinitelyNotLoom Extension icon</strong> in the Chrome toolbar. Ensure the target tab (Gmail, GitHub, Docs, etc.) is open within the <strong>same browser window</strong>, and hit <strong>Record Your Screen</strong>!
               </p>
             </div>
 
-            <div className="bg-black/60 p-4 rounded-2xl border border-zinc-800 space-y-1.5">
-              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-yellow-400 text-black flex items-center justify-center font-extrabold text-xs">3</span>
-                Floating Controls & Live Hub
+            {/* Step 3 */}
+            <div className="bg-black/80 p-5 rounded-2xl border border-zinc-800 space-y-2">
+              <div className="font-extrabold text-yellow-400 flex items-center gap-2 text-sm">
+                <span className="w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center font-black text-xs">3</span>
+                Right Dock & Live Hub
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                Use the right-side floating control dock over your target tab. This home screen will monitor and preview your live stream!
+                Use the <strong>Right-Side Floating Control Dock</strong> over your target tab while this home screen monitors your live HD recording stream in real-time.
               </p>
             </div>
           </div>
