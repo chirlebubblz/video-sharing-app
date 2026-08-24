@@ -21,8 +21,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Fallback: Redirect to GitHub Releases or latest binary assets
-    return NextResponse.redirect('https://github.com/chirlebubblz/video-sharing-app/releases');
+    // Redirect directly to official v1.0.0 binary asset for instant 1-click browser file download
+    return NextResponse.redirect('https://github.com/chirlebubblz/video-sharing-app/releases/download/v1.0.0/DefinitelyNotLoom.Studio.0.1.0.exe');
   } catch (err) {
     console.error('Error serving desktop exe:', err);
     return NextResponse.json({ error: 'Desktop app installer not available' }, { status: 500 });

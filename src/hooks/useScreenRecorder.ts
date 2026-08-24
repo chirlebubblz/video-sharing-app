@@ -86,7 +86,7 @@ export function useScreenRecorder() {
       currentInterimTextRef.current = '';
       isRecordingRef.current = true;
 
-      // 1. Get Screen Stream (with audio fallback if browser rejects system audio request)
+      // 1. Get Screen Stream (with fallback for system audio & Electron desktop app)
       let screen: MediaStream;
       try {
         screen = await navigator.mediaDevices.getDisplayMedia({
@@ -95,9 +95,32 @@ export function useScreenRecorder() {
         });
       } catch (err) {
         console.warn('System audio getDisplayMedia fallback to video-only:', err);
-        screen = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-        });
+        try {
+          screen = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+          });
+        } catch (err2) {
+          // Electron Desktop Capturer Fallback
+          if (typeof window !== 'undefined' && (window as any).electronAPI) {
+            const sources = await (window as any).electronAPI.getDesktopSources();
+            if (sources && sources.length > 0) {
+              const stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                  mandatory: {
+                    chromeMediaSource: 'desktop',
+                    chromeMediaSourceId: sources[0].id,
+                  },
+                } as any,
+              });
+              screen = stream;
+            } else {
+              throw err2;
+            }
+          } else {
+            throw err2;
+          }
+        }
       }
       setScreenStream(screen);
 

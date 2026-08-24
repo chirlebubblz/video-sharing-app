@@ -381,6 +381,61 @@ export function StudioRecorder() {
         </div>
       )}
 
+      {/* Chrome Extension 3-Step Setup Guide */}
+      {!isRecording && !previewUrl && (
+        <div className="mt-8 bg-purple-950/30 border border-purple-500/30 rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Download className="text-purple-400" size={18} /> How to Install the Floating Chrome Extension
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Record with floating camera bubbles & live pen drawing over ANY website (Vercel, GitHub, Google, PowerPoint).
+              </p>
+            </div>
+            <a
+              href="/api/download-extension"
+              download
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-lg shrink-0"
+            >
+              <Download size={14} /> Download Extension (.zip)
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800 space-y-1">
+              <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">1</span>
+                Download & Extract
+              </div>
+              <p className="text-gray-300 leading-relaxed">
+                Click <strong>Download Extension (.zip)</strong> and unzip the folder on your computer.
+              </p>
+            </div>
+
+            <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800 space-y-1">
+              <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">2</span>
+                Enable Developer Mode
+              </div>
+              <p className="text-gray-300 leading-relaxed">
+                Open <code className="bg-gray-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono">chrome://extensions</code> in Chrome/Edge and toggle <strong>Developer mode</strong> ON.
+              </p>
+            </div>
+
+            <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800 space-y-1">
+              <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px]">3</span>
+                Load Unpacked
+              </div>
+              <p className="text-gray-300 leading-relaxed">
+                Click <strong>Load unpacked</strong> in Chrome and select the extracted extension folder!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Live Speech Caption Ticker during Active Recording */}
       {isRecording && liveTranscript.length > 0 && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/85 border border-indigo-500/30 text-indigo-300 px-5 py-2 rounded-2xl shadow-xl backdrop-blur-md text-xs font-mono max-w-lg truncate z-50 flex items-center gap-2">

@@ -1,9 +1,8 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut, session } = require('electron');
 const path = require('path');
 
 let mainWindow = null;
 let overlayWindow = null;
-let tray = null;
 
 const APP_URL = process.env.ELECTRON_START_URL || 'https://video-sharing-app-jordan.vercel.app';
 
@@ -30,30 +29,21 @@ function createMainWindow() {
   });
 }
 
-function createOverlayWindow() {
-  if (overlayWindow) return;
-
-  overlayWindow = new BrowserWindow({
-    width: 260,
-    height: 260,
-    alwaysOnTop: true,
-    transparent: true,
-    frame: false,
-    resizable: true,
-    hasShadow: false,
-    skipTaskbar: true,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
+app.whenReady().then(() => {
+  // Handle Electron getDisplayMedia screen capture permissions natively
+  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+    desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+      if (sources && sources.length > 0) {
+        callback({ video: sources[0], audio: 'loopback' });
+      } else {
+        callback({});
+      }
+    }).catch((err) => {
+      console.warn('Display media handler error:', err);
+      callback({});
+    });
   });
 
-  overlayWindow.loadURL(`${APP_URL}?overlay=true`);
-  overlayWindow.setIgnoreMouseEvents(false);
-}
-
-app.whenReady().then(() => {
   createMainWindow();
 
   // Register Global Shortcut (Alt+Shift+R to start/stop recording)
