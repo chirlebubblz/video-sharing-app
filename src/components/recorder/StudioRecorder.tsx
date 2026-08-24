@@ -129,6 +129,14 @@ export function StudioRecorder() {
             <span className="text-xs bg-indigo-500/20 text-indigo-400 font-semibold px-2.5 py-1 rounded-full border border-indigo-500/30">
               HD 60fps
             </span>
+            <a
+              href="/api/download-extension"
+              download
+              className="text-xs bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold px-3 py-1 rounded-full border border-purple-500/40 transition flex items-center gap-1.5 shadow-md"
+              title="Download Chrome Extension to record floating camera over any website"
+            >
+              <Download size={12} /> Chrome Extension (.zip)
+            </a>
           </h1>
           <p className="text-gray-400 mt-1 text-sm">
             Record screen, camera, and mixed audio with real-time chunk streaming & AI transcription ready.
