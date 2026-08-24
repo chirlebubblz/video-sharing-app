@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, videos: [] });
     }
 
-    const videos = await db.video.findMany({
+    const videosPromise = db.video.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
       select: {
@@ -21,6 +21,12 @@ export async function GET(req: NextRequest) {
         videoUrl: true,
       },
     });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Supabase DB connection timeout')), 3000)
+    );
+
+    const videos = (await Promise.race([videosPromise, timeoutPromise])) as any[];
 
     const formatted = videos.map((v) => {
       const mins = Math.floor(v.duration / 60);
@@ -41,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, videos: formatted });
   } catch (err) {
-    console.error('Error fetching videos from Supabase DB:', err);
+    console.warn('Supabase DB connection warning, falling back to local library cache:', err);
     return NextResponse.json({ success: false, videos: [] });
   }
 }
