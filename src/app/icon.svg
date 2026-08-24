@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="icon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#icon-grad)" />
+  <!-- Video Camera Icon -->
+  <path d="M16 22C16 19.7909 17.7909 18 20 18H36C38.2091 18 40 19.7909 40 22V42C40 44.2091 38.2091 46 36 46H20C17.7909 46 16 44.2091 16 42V22Z" fill="white" />
+  <path d="M43 27.5L50.5 22.5C51.5 21.8 52.8 22.5 52.8 23.7V40.3C52.8 41.5 51.5 42.2 50.5 41.5L43 36.5V27.5Z" fill="white" fill-opacity="0.9" />
+</svg>

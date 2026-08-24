@@ -1,0 +1,68 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Video {
+  id           String       @id @default(uuid())
+  title        String
+  description  String?
+  videoUrl     String
+  duration     Float        @default(0)
+  viewsCount   Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // AI & Metadata
+  summary      String?
+  actionItems  String?      // JSON string of action items
+  chapters     String?      // JSON array of chapter timestamps
+
+  // Relations
+  transcripts  Transcript[]
+  comments     Comment[]
+  reactions    Reaction[]
+  cta          CallToAction?
+}
+
+model Transcript {
+  id        String   @id @default(uuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  start     Float
+  end       Float
+  text      String
+  isFiller  Boolean  @default(false)
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  author    String   @default("Anonymous Viewer")
+  text      String
+  timestamp Float    // Exact video time in seconds
+  createdAt DateTime @default(now())
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  emoji     String   // e.g. 🔥, 👏, 💡
+  timestamp Float
+  createdAt DateTime @default(now())
+}
+
+model CallToAction {
+  id          String @id @default(uuid())
+  videoId     String @unique
+  video       Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  buttonText  String
+  buttonUrl   String
+  appearTime  Float  @default(0)
+}
