@@ -26,6 +26,10 @@ document.getElementById('btn-start').addEventListener('click', async () => {
 
   // Send start recording message to tab
   chrome.tabs.sendMessage(tab.id, { action: 'start_recording' }, () => {
+    if (chrome.runtime.lastError) {
+      // Intentionally handle lastError to suppress Chrome extension error log
+      console.log('Message delivery status:', chrome.runtime.lastError.message);
+    }
     window.close();
   });
 });
