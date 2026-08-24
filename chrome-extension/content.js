@@ -409,6 +409,22 @@
         });
         const data = await res.json();
         if (data.videoId) {
+          const videoObj = {
+            id: data.videoId,
+            title: `Extension Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+            duration: `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`,
+            views: 1,
+            createdAt: 'Just now',
+            thumbnail: 'bg-gradient-to-tr from-yellow-950 via-zinc-900 to-black',
+          };
+
+          // 1. Real-time broadcast to control screen if open in another tab
+          try {
+            const channel = new BroadcastChannel('dnl_video_sync');
+            channel.postMessage({ type: 'NEW_VIDEO', video: videoObj });
+          } catch(e) {}
+
+          // 2. Open shareable video page in a new tab
           window.open(`https://video-sharing-app-jordan.vercel.app/v/${data.videoId}`, '_blank');
         } else {
           alert('Recording saved!');
