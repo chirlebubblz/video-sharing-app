@@ -304,6 +304,7 @@
     clearInterval(timerInterval);
 
     try {
+      chrome.storage.local.set({ extension_recording_state: 'RECORDING_STOPPED', state_timestamp: Date.now() });
       chrome.runtime.sendMessage({ action: 'RECORDING_STOPPED' });
       const syncChan = new BroadcastChannel('dnl_video_sync');
       syncChan.postMessage({ type: 'RECORDING_STOPPED' });
@@ -380,8 +381,9 @@
         isRecording = true;
         startTime = Date.now();
 
-        // Broadcast recording started state via extension background & BroadcastChannel
+        // Broadcast recording started state via chrome.storage.local, extension background & BroadcastChannel
         try {
+          chrome.storage.local.set({ extension_recording_state: 'RECORDING_STARTED', state_timestamp: Date.now() });
           chrome.runtime.sendMessage({ action: 'RECORDING_STARTED' });
           const syncChan = new BroadcastChannel('dnl_video_sync');
           syncChan.postMessage({ type: 'RECORDING_STARTED' });
@@ -527,6 +529,21 @@
       showLauncherCard();
     }
   });
+
+  // Storage state listener to sync recording status across all tabs
+  try {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'local' && changes.extension_recording_state) {
+        window.postMessage({ type: changes.extension_recording_state.newValue }, '*');
+      }
+    });
+
+    chrome.storage.local.get(['extension_recording_state'], (result) => {
+      if (result.extension_recording_state === 'RECORDING_STARTED') {
+        window.postMessage({ type: 'RECORDING_STARTED' }, '*');
+      }
+    });
+  } catch (e) {}
 
   // Announce to web app that DefinitelyNotLoom Extension is present
   try {
