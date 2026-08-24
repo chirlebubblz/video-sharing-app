@@ -1,4 +1,4 @@
-// DefinitelyNotLoom Content Script - Pixel Perfect Loom UI
+// DefinitelyNotLoom Content Script - Pixel Perfect Loom UI with Native Extension Stream Permissions
 (function () {
   if (window.__dnlInjected) return;
   window.__dnlInjected = true;
@@ -56,7 +56,7 @@
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-        <button id="dnl-opt-full" style="background:#27272a;border:1px solid #6366f1;color:white;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:between;">
+        <button id="dnl-opt-full" style="background:#27272a;border:1px solid #6366f1;color:white;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;display:flex;align-items:center;justify-between;">
           <span>🖥️ Full Screen + Camera</span>
           <span style="color:#818cf8;">✓</span>
         </button>
@@ -65,7 +65,7 @@
         </button>
       </div>
 
-      <div style="background:#09090b;padding:12px;border-radius:12px;margin-bottom:18px;font-size:12px;color:#d4d4d8;display:flex;align-items:center;justify-content:between;">
+      <div style="background:#09090b;padding:12px;border-radius:12px;margin-bottom:18px;font-size:12px;color:#d4d4d8;display:flex;align-items:center;justify-between;">
         <span>🎙️ Microphone</span>
         <span style="color:#22c55e;font-weight:700;">Connected</span>
       </div>
@@ -285,38 +285,71 @@
       elapsedSeconds = 0;
       isPaused = false;
 
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true,
+      // Request native desktop screen stream via chrome.desktopCapture background API
+      chrome.runtime.sendMessage({ action: 'request_desktop_stream' }, async (response) => {
+        if (!response || !response.streamId) {
+          try {
+            mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+          } catch (e) {
+            cleanupRecordingUI();
+            return;
+          }
+        } else {
+          try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: response.streamId,
+                },
+              },
+              video: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: response.streamId,
+                },
+              },
+            });
+          } catch (e) {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: response.streamId,
+                },
+              },
+            });
+          }
+        }
+
+        mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+          }
+        };
+
+        mediaRecorder.start(1000);
+        isRecording = true;
+        startTime = Date.now();
+
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          if (!isPaused) {
+            elapsedSeconds++;
+            const mins = Math.floor(elapsedSeconds / 60);
+            const secs = String(elapsedSeconds % 60).padStart(2, '0');
+            const timerEl = document.getElementById('dnl-timer');
+            if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+          }
+        }, 1000);
+
+        mediaStream.getVideoTracks()[0].onended = () => {
+          stopRecordingAndUpload();
+        };
       });
-
-      mediaStream = screenStream;
-      mediaRecorder = new MediaRecorder(screenStream, { mimeType: 'video/webm' });
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          recordedChunks.push(e.data);
-        }
-      };
-
-      mediaRecorder.start(1000);
-      isRecording = true;
-      startTime = Date.now();
-
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        if (!isPaused) {
-          elapsedSeconds++;
-          const mins = Math.floor(elapsedSeconds / 60);
-          const secs = String(elapsedSeconds % 60).padStart(2, '0');
-          const timerEl = document.getElementById('dnl-timer');
-          if (timerEl) timerEl.innerText = `${mins}:${secs}`;
-        }
-      }, 1000);
-
-      screenStream.getVideoTracks()[0].onended = () => {
-        stopRecordingAndUpload();
-      };
     } catch (err) {
       console.error('Error starting Loom recording:', err);
       cleanupRecordingUI();
