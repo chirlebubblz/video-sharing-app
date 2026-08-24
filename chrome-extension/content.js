@@ -304,6 +304,7 @@
     clearInterval(timerInterval);
 
     try {
+      chrome.runtime.sendMessage({ action: 'RECORDING_STOPPED' });
       const syncChan = new BroadcastChannel('dnl_video_sync');
       syncChan.postMessage({ type: 'RECORDING_STOPPED' });
     } catch (e) {}
@@ -379,8 +380,9 @@
         isRecording = true;
         startTime = Date.now();
 
-        // Broadcast recording started state to home screen monitor
+        // Broadcast recording started state via extension background & BroadcastChannel
         try {
+          chrome.runtime.sendMessage({ action: 'RECORDING_STARTED' });
           const syncChan = new BroadcastChannel('dnl_video_sync');
           syncChan.postMessage({ type: 'RECORDING_STARTED' });
         } catch (e) {}
@@ -512,6 +514,10 @@
     if (request.action === 'start_recording') {
       showLauncherCard();
       sendResponse({ status: 'launcher_opened' });
+    } else if (request.action === 'RECORDING_STARTED') {
+      window.postMessage({ type: 'RECORDING_STARTED' }, '*');
+    } else if (request.action === 'RECORDING_STOPPED') {
+      window.postMessage({ type: 'RECORDING_STOPPED' }, '*');
     }
   });
 

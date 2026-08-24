@@ -43,8 +43,17 @@ export function StudioRecorder() {
     setBubblePosition,
   } = useScreenRecorder();
 
-  // Listen for cross-tab Extension recording start/stop events
+  // Listen for cross-tab and cross-origin Extension recording start/stop events
   useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'RECORDING_STARTED') {
+        setIsExtensionRecording(true);
+      } else if (event.data?.type === 'RECORDING_STOPPED' || event.data?.type === 'NEW_VIDEO') {
+        setIsExtensionRecording(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
     const channel = new BroadcastChannel('dnl_video_sync');
     channel.onmessage = (event) => {
       if (event.data?.type === 'RECORDING_STARTED') {
@@ -53,7 +62,11 @@ export function StudioRecorder() {
         setIsExtensionRecording(false);
       }
     };
-    return () => channel.close();
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      channel.close();
+    };
   }, []);
 
   const activeRecording = isRecording || isExtensionRecording;
