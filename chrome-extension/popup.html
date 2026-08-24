@@ -4,54 +4,86 @@
   <meta charset="utf-8">
   <style>
     body {
-      width: 260px;
+      width: 270px;
       padding: 16px;
       margin: 0;
       font-family: system-ui, -apple-system, sans-serif;
-      background: #0f172a;
+      background: #09090b;
       color: white;
     }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .header img {
+      width: 28px;
+      height: 28px;
+    }
     h2 {
-      font-size: 14px;
-      margin: 0 0 4px 0;
-      color: #818cf8;
+      font-size: 15px;
+      margin: 0;
+      color: #facc15;
+      font-weight: 900;
     }
     p {
       font-size: 11px;
-      color: #94a3b8;
+      color: #a1a1aa;
       margin: 0 0 14px 0;
+      line-height: 1.4;
     }
     .btn-main {
       width: 100%;
       padding: 12px;
-      background: linear-gradient(135deg, #f97316, #ef4444);
-      color: white;
+      background: #facc15;
+      color: #000000;
       border: none;
       border-radius: 12px;
-      font-weight: 800;
-      font-size: 13px;
+      font-weight: 900;
+      font-size: 14px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 4px 12px rgba(250, 204, 21, 0.3);
       margin-bottom: 8px;
     }
     .btn-sub {
       width: 100%;
-      padding: 8px;
-      background: #1e293b;
-      color: #cbd5e1;
-      border: 1px solid #334155;
+      padding: 9px 10px;
+      background: #18181b;
+      color: #e4e4e7;
+      border: 1px solid #27272a;
       border-radius: 10px;
       font-weight: 600;
       font-size: 11px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      transition: all 0.15s;
+    }
+    .btn-sub:hover {
+      background: #27272a;
+      color: #facc15;
+      border-color: #facc15;
     }
   </style>
 </head>
 <body>
-  <h2>DefinitelyNotLoom Studio</h2>
+  <div class="header">
+    <img src="icon.svg" alt="Viking Icon">
+    <h2>DefinitelyNotLoom</h2>
+  </div>
   <p>Record your screen with floating camera bubble & pen toolbar over any website.</p>
+  
   <button id="btn-start" class="btn-main">🎥 Record Your Screen</button>
-  <button id="btn-perm" class="btn-sub">⚙️ Grant Cam & Mic Permission</button>
+
+  <div style="border-top: 1px solid #27272a; margin: 12px 0 6px 0; padding-top: 10px;">
+    <button id="btn-open-control" class="btn-sub">💻 Open Control Screen / Library</button>
+    <button id="btn-view-latest" class="btn-sub">🎬 View Latest Recording</button>
+    <button id="btn-perm" class="btn-sub">⚙️ Grant Cam & Mic Permission</button>
+  </div>
 
   <script src="popup.js"></script>
 </body>

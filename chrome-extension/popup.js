@@ -2,7 +2,6 @@ document.getElementById('btn-start').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab || !tab.id) return;
 
-  // Check if page URL is supported by Chrome extension content scripts
   if (
     tab.url.startsWith('chrome://') ||
     tab.url.startsWith('edge://') ||
@@ -14,21 +13,32 @@ document.getElementById('btn-start').addEventListener('click', async () => {
     return;
   }
 
-  // Ensure content script is injected dynamically into the active tab
   try {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['content.js'],
     });
-  } catch (e) {
-    console.warn('Script injection attempt:', e);
-  }
+  } catch (e) {}
 
-  // Send start recording message to tab
   chrome.tabs.sendMessage(tab.id, { action: 'start_recording' }, () => {
-    if (chrome.runtime.lastError) {
-      // Intentionally handle lastError to suppress Chrome extension error log
-      console.log('Message delivery status:', chrome.runtime.lastError.message);
+    if (chrome.runtime.lastError) {}
+    window.close();
+  });
+});
+
+// Open Main Control Screen / Video Library
+document.getElementById('btn-open-control').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://video-sharing-app-jordan.vercel.app' });
+  window.close();
+});
+
+// View Latest Recording Page
+document.getElementById('btn-view-latest').addEventListener('click', () => {
+  chrome.storage.local.get(['latest_video_id'], (result) => {
+    if (result && result.latest_video_id) {
+      chrome.tabs.create({ url: `https://video-sharing-app-jordan.vercel.app/v/${result.latest_video_id}` });
+    } else {
+      chrome.tabs.create({ url: 'https://video-sharing-app-jordan.vercel.app' });
     }
     window.close();
   });
