@@ -60,7 +60,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
             summary: '• Recorded speech & AI intelligence session.',
             actionItems: ['Review recording session'],
             chapters: [{ time: 0, title: 'Video Recording' }],
-            videoUrl: `/uploads/${videoId}.webm`,
+            videoUrl: `/api/video/stream/${videoId}`,
             transcripts: [],
           });
         }

@@ -65,7 +65,7 @@ export async function GET(
       summary: aiResult.summary,
       actionItems: aiResult.actionItems,
       chapters: aiResult.chapters,
-      videoUrl: `/uploads/${videoId}.webm`,
+      videoUrl: `/api/video/stream/${videoId}`,
       transcripts: aiResult.transcripts,
     });
   } catch (err) {
@@ -77,7 +77,7 @@ export async function GET(
       summary: '• Speech & AI intelligence recording session.',
       actionItems: ['Review recording'],
       chapters: [{ time: 0, title: 'Video Start' }],
-      videoUrl: `/uploads/${videoId}.webm`,
+      videoUrl: `/api/video/stream/${videoId}`,
       transcripts: [],
     });
   }
