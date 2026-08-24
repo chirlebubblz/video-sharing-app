@@ -44,33 +44,33 @@
     `;
 
     launcherCardEl.innerHTML = `
-      <div style="display:flex;align-items:center;justify-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(99,102,241,0.2);color:#818cf8;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:16px;">📹</div>
+          <div style="width:34px;height:34px;border-radius:10px;background:#facc15;color:#000000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;">🛡️</div>
           <div>
-            <div style="font-weight:800;font-size:14px;color:white;">DefinitelyNotLoom</div>
-            <div style="font-size:11px;color:#a1a1aa;">Studio Recording Ready</div>
+            <div style="font-weight:900;font-size:15px;color:#facc15;">DefinitelyNotLoom</div>
+            <div style="font-size:11px;color:#a1a1aa;">Viking Studio Active</div>
           </div>
         </div>
         <button id="dnl-close-launcher" style="background:transparent;border:none;color:#71717a;cursor:pointer;font-size:16px;margin-left:auto;">✕</button>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-        <button id="dnl-opt-full" style="background:#27272a;border:1px solid #6366f1;color:white;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;display:flex;align-items:center;justify-between;">
+        <button id="dnl-opt-full" style="background:#27272a;border:1px solid #facc15;color:white;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
           <span>🖥️ Full Screen + Camera</span>
-          <span style="color:#818cf8;">✓</span>
+          <span style="color:#facc15;font-weight:bold;">✓</span>
         </button>
         <button id="dnl-opt-cam" style="background:#27272a;border:1px solid rgba(255,255,255,0.08);color:#a1a1aa;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;">
           📷 Camera Only
         </button>
       </div>
 
-      <div style="background:#09090b;padding:12px;border-radius:12px;margin-bottom:18px;font-size:12px;color:#d4d4d8;display:flex;align-items:center;justify-between;">
+      <div style="background:#09090b;padding:12px;border-radius:12px;margin-bottom:18px;font-size:12px;color:#d4d4d8;display:flex;align-items:center;justify-content:space-between;">
         <span>🎙️ Microphone</span>
-        <span style="color:#22c55e;font-weight:700;">Connected</span>
+        <span style="color:#facc15;font-weight:700;">Connected</span>
       </div>
 
-      <button id="dnl-btn-start-record" style="width:100%;background:linear-gradient(135deg, #f97316, #ef4444);border:none;color:white;padding:14px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(239,68,68,0.3);transition:transform 0.1s;">
+      <button id="dnl-btn-start-record" style="width:100%;background:#facc15;border:none;color:#000000;padding:14px;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(250,204,21,0.25);transition:transform 0.1s;">
         Start Recording
       </button>
     `;
@@ -140,7 +140,7 @@
       width: 220px;
       height: 145px;
       border-radius: 16px;
-      border: 3px solid #ef4444;
+      border: 3px solid #facc15;
       box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.6);
       z-index: 2147483646;
       overflow: hidden;

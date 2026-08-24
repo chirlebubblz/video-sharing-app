@@ -1,11 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <defs>
-    <linearGradient id="icon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#a855f7" />
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="18" fill="url(#icon-grad)" />
-  <path d="M16 22C16 19.7909 17.7909 18 20 18H36C38.2091 18 40 19.7909 40 22V42C40 44.2091 38.2091 46 36 46H20C17.7909 46 16 44.2091 16 42V22Z" fill="white" />
-  <path d="M43 27.5L50.5 22.5C51.5 21.8 52.8 22.5 52.8 23.7V40.3C52.8 41.5 51.5 42.2 50.5 41.5L43 36.5V27.5Z" fill="white" fill-opacity="0.9" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="128" fill="#000000"/>
+  
+  <!-- Left Horn -->
+  <path d="M 120 180 C 80 140, 60 70, 110 50 C 130 90, 150 130, 160 170 Z" fill="#FFFFFF" stroke="#FACC15" stroke-width="8" stroke-linejoin="round"/>
+  
+  <!-- Right Horn -->
+  <path d="M 392 180 C 432 140, 452 70, 402 50 C 382 90, 362 130, 352 170 Z" fill="#FFFFFF" stroke="#FACC15" stroke-width="8" stroke-linejoin="round"/>
+  
+  <!-- Viking Helmet Base -->
+  <path d="M 140 180 C 140 120, 372 120, 372 180 C 372 200, 140 200, 140 180 Z" fill="#FACC15" stroke="#000000" stroke-width="6"/>
+  <rect x="236" y="115" width="40" height="75" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="4"/>
+  
+  <!-- Smiley Face Base (Yellow Circle) -->
+  <circle cx="256" cy="310" r="140" fill="#FACC15" stroke="#FFFFFF" stroke-width="10"/>
+  
+  <!-- Smiley Eyes -->
+  <circle cx="206" cy="280" r="18" fill="#000000"/>
+  <circle cx="306" cy="280" r="18" fill="#000000"/>
+  <circle cx="212" cy="274" r="6" fill="#FFFFFF"/>
+  <circle cx="312" cy="274" r="6" fill="#FFFFFF"/>
+  
+  <!-- Viking Mustache / Big Smile -->
+  <path d="M 180 330 Q 256 390 332 330" fill="none" stroke="#000000" stroke-width="16" stroke-linecap="round"/>
+  <path d="M 170 320 C 190 350, 230 360, 256 345 C 282 360, 322 350, 342 320 C 310 375, 202 375, 170 320 Z" fill="#000000"/>
 </svg>

@@ -123,16 +123,17 @@ export function StudioRecorder() {
       <div className="flex items-center justify-between border-b border-gray-800 pb-6 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text">
+            <img src="/icon.svg" alt="Viking Smiley Logo" className="w-9 h-9 shrink-0 drop-shadow-md" />
+            <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
               DefinitelyNotLoom Studio
             </span>
-            <span className="text-xs bg-indigo-500/20 text-indigo-400 font-semibold px-2.5 py-1 rounded-full border border-indigo-500/30">
+            <span className="text-xs bg-yellow-400/20 text-yellow-300 font-bold px-2.5 py-1 rounded-full border border-yellow-400/40">
               HD 60fps
             </span>
             <a
               href="/api/download-exe"
               download
-              className="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold px-3 py-1 rounded-full border border-indigo-500/40 transition flex items-center gap-1.5 shadow-md"
+              className="text-xs bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-3 py-1 rounded-full border border-yellow-300 transition flex items-center gap-1.5 shadow-md"
               title="Download Windows Desktop App (.exe) for native floating overlay"
             >
               <Monitor size={12} /> Desktop App (.exe)
@@ -140,7 +141,7 @@ export function StudioRecorder() {
             <a
               href="/api/download-extension"
               download
-              className="text-xs bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold px-3 py-1 rounded-full border border-purple-500/40 transition flex items-center gap-1.5 shadow-md"
+              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-yellow-400 font-bold px-3 py-1 rounded-full border border-yellow-400/40 transition flex items-center gap-1.5 shadow-md"
               title="Download Chrome Extension (.zip)"
             >
               <Download size={12} /> Extension (.zip)
@@ -345,7 +346,7 @@ export function StudioRecorder() {
             <div className="border-t border-gray-800 pt-6">
               <button
                 onClick={handleStart}
-                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-2xl shadow-xl hover:shadow-indigo-500/25 transition duration-200 flex items-center justify-center gap-3 text-lg"
+                className="w-full py-4 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-2xl shadow-xl hover:shadow-yellow-400/20 transition duration-200 flex items-center justify-center gap-3 text-lg"
               >
                 <Video size={24} /> Start Recording
               </button>

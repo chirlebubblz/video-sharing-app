@@ -47,7 +47,7 @@ export function CameraBubble({
         });
         
         const container = pipWin.document.createElement('div');
-        container.style.cssText = 'width:100%;height:100%;overflow:hidden;border-radius:50%;background:#0f172a;display:flex;align-items:center;justify-content:center;border:4px solid #6366f1;box-shadow:0 10px 25px rgba(0,0,0,0.5);';
+        container.style.cssText = 'width:100%;height:100%;overflow:hidden;border-radius:50%;background:#09090b;display:flex;align-items:center;justify-content:center;border:4px solid #facc15;box-shadow:0 10px 25px rgba(0,0,0,0.5);';
         
         const vid = pipWin.document.createElement('video');
         vid.srcObject = videoRef.current.srcObject || stream;
@@ -110,7 +110,7 @@ export function CameraBubble({
   return (
     <div
       style={{ left: `${pos.x}px`, top: `${pos.y}px`, width: `${sizePx}px`, height: `${sizePx}px` }}
-      className={`fixed z-40 group cursor-move shadow-2xl border-4 border-indigo-500 overflow-hidden backdrop-blur-md transition-all duration-75 ${
+      className={`fixed z-40 group cursor-move shadow-2xl border-4 border-yellow-400 overflow-hidden backdrop-blur-md transition-all duration-75 ${
         shape === 'circle' ? 'rounded-full' : 'rounded-2xl'
       }`}
       onMouseDown={handleMouseDown}
@@ -127,7 +127,7 @@ export function CameraBubble({
       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
         <button
           onClick={togglePictureInPicture}
-          className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full backdrop-blur-sm shadow-md"
+          className="p-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-full backdrop-blur-sm shadow-md"
           title="Pop out floating camera over all windows & tabs (Document PiP)"
         >
           <ExternalLink size={16} />
