@@ -505,6 +505,7 @@ export function useScreenRecorder() {
   }, []);
 
   return {
+    cameraStream,
     isRecording,
     isPaused,
     recordingTime,

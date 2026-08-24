@@ -40,6 +40,7 @@ export function StudioRecorder() {
 
   const { hasCamera, hasMic, cameras, microphones, refreshDevices } = useMediaDevices();
   const {
+    cameraStream,
     isRecording,
     isPaused,
     recordingTime,
@@ -517,7 +518,7 @@ export function StudioRecorder() {
       {/* Camera Bubble Preview overlay */}
       {isRecording && includeCamera && (
         <CameraBubble
-          stream={null} // Composited inside hook
+          stream={cameraStream}
           shape={cameraShape}
           size={cameraSize}
           isOff={isCameraOff}
