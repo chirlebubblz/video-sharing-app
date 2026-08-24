@@ -1,44 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useScreenRecorder } from '@/hooks/useScreenRecorder';
-import { useMediaDevices } from '@/hooks/useMediaDevices';
 import { CameraBubble } from './CameraBubble';
 import { AnnotationCanvas } from './AnnotationCanvas';
 import {
   Video,
-  VideoOff,
-  Mic,
-  MicOff,
   Monitor,
-  Circle,
-  Square as SquareIcon,
   Play,
   Pause,
   RotateCcw,
   Square,
-  Sparkles,
   Download,
   Share2,
   RefreshCw,
   Pencil,
   CheckCircle2,
-  AlertCircle,
-  Layout,
-  X,
+  Mic,
+  MicOff,
+  Sparkles,
+  Info,
 } from 'lucide-react';
 
 export function StudioRecorder() {
-  const [includeMic, setIncludeMic] = useState(true);
-  const [includeCamera, setIncludeCamera] = useState(true);
-  const [cameraShape, setCameraShape] = useState<'circle' | 'square'>('circle');
-  const [cameraSize, setCameraSize] = useState<'sm' | 'md' | 'lg'>('md');
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
-  const [showLauncherModal, setShowLauncherModal] = useState(false);
 
-  const { hasCamera, hasMic, cameras, microphones, refreshDevices } = useMediaDevices();
   const {
     cameraStream,
     isRecording,
@@ -46,13 +34,10 @@ export function StudioRecorder() {
     recordingTime,
     previewUrl,
     recordedBlob,
-    recordedChunks,
     liveTranscript,
     isMicMuted,
     isCameraOff,
     audioLevel,
-    errorMessage,
-    startRecording,
     pauseRecording,
     resumeRecording,
     stopRecording,
@@ -69,26 +54,6 @@ export function StudioRecorder() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const openLauncherCard = () => {
-    // 1. Trigger Chrome Extension native overlay if installed
-    try {
-      window.postMessage({ type: 'START_LOOM_RECORDING_FROM_WEB' }, '*');
-    } catch (e) {}
-
-    // 2. Open web launcher modal
-    setShowLauncherModal(true);
-  };
-
-  const handleStartActualRecording = () => {
-    setShowLauncherModal(false);
-    startRecording({
-      includeMic,
-      includeCamera,
-      cameraShape,
-      cameraSize,
-    });
-  };
-
   const handleDownload = () => {
     if (!previewUrl) return;
     const a = document.createElement('a');
@@ -101,7 +66,7 @@ export function StudioRecorder() {
     if (!recordedBlob) return;
     setIsUploading(true);
 
-    const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB per chunk (Vercel payload limit is 4.5MB)
+    const CHUNK_SIZE = 2 * 1024 * 1024;
     const totalChunks = Math.ceil(recordedBlob.size / CHUNK_SIZE);
     const uploadId = `up-${Date.now()}`;
     const videoId = `vid-${Date.now()}`;
@@ -156,156 +121,121 @@ export function StudioRecorder() {
     }
   };
 
-  // Auto-upload as soon as recording finishes
-  React.useEffect(() => {
+  useEffect(() => {
     if (recordedBlob && !uploadedVideoId && !isUploading) {
       handleSimulatedUpload();
     }
   }, [recordedBlob]);
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-8">
-      {/* Studio Header */}
-      <div className="flex items-center justify-between border-b border-gray-800 pb-6 mb-8">
+    <div className="w-full max-w-7xl mx-auto px-4 py-4 space-y-6">
+      {/* Studio Header Bar */}
+      <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            <img src="/icon.svg" alt="Viking Smiley Logo" className="w-9 h-9 shrink-0 drop-shadow-md" />
+          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-3">
+            <img src="/icon.svg" alt="Viking Smiley Logo" className="w-8 h-8 shrink-0 drop-shadow-md" />
             <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
               DefinitelyNotLoom Studio
             </span>
             <span className="text-xs bg-yellow-400/20 text-yellow-300 font-bold px-2.5 py-1 rounded-full border border-yellow-400/40">
               HD 60fps
             </span>
-            <a
-              href="/api/download-exe"
-              download
-              className="text-xs bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-3 py-1 rounded-full border border-yellow-300 transition flex items-center gap-1.5 shadow-md"
-              title="Download Windows Desktop App (.exe) for native floating overlay"
-            >
-              <Monitor size={12} /> Desktop App (.exe)
-            </a>
-            <a
-              href="/api/download-extension"
-              download
-              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-yellow-400 font-bold px-3 py-1 rounded-full border border-yellow-400/40 transition flex items-center gap-1.5 shadow-md"
-              title="Download Chrome Extension (.zip)"
-            >
-              <Download size={12} /> Extension (.zip)
-            </a>
           </h1>
-          <p className="text-gray-400 mt-1 text-sm font-medium">
-            Record your screen, camera, and audio with real-time AI transcriptions & instant shareable links.
+          <p className="text-zinc-400 mt-1 text-xs font-medium">
+            Use the Chrome Extension toolbar icon to record any tab in the same window. The monitor below shows your live recording.
           </p>
         </div>
 
-        {isRecording && (
-          <div className="flex items-center gap-4 bg-gray-900 border border-gray-800 px-4 py-2 rounded-2xl shadow-lg">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-500 pulsate" />
-              <span className="font-mono text-lg font-bold text-red-500">
-                {formatTime(recordingTime)}
-              </span>
-            </div>
-            <div className="h-4 w-px bg-gray-800" />
-            <button
-              onClick={isPaused ? resumeRecording : pauseRecording}
-              className="p-2 hover:bg-gray-800 rounded-lg text-gray-300 transition"
-              title={isPaused ? 'Resume' : 'Pause'}
-            >
-              {isPaused ? <Play size={18} /> : <Pause size={18} />}
-            </button>
-            <button
-              onClick={() => restartRecording({ includeMic, includeCamera, cameraShape, cameraSize })}
-              className="p-2 hover:bg-gray-800 rounded-lg text-gray-300 transition hover:text-amber-400"
-              title="Restart Recording"
-            >
-              <RotateCcw size={18} />
-            </button>
-            <button
-              onClick={stopRecording}
-              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm transition flex items-center gap-1.5"
-            >
-              <Square size={14} /> Stop
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/download-exe"
+            download
+            className="text-xs bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-3 py-1.5 rounded-xl border border-yellow-300 transition flex items-center gap-1.5 shadow-md"
+            title="Download Windows Desktop App (.exe)"
+          >
+            <Monitor size={14} /> Desktop App (.exe)
+          </a>
+          <a
+            href="/api/download-extension"
+            download
+            className="text-xs bg-zinc-900 hover:bg-zinc-800 text-yellow-400 font-bold px-3 py-1.5 rounded-xl border border-yellow-400/40 transition flex items-center gap-1.5 shadow-md"
+            title="Download Chrome Extension (.zip)"
+          >
+            <Download size={14} /> Extension (.zip)
+          </a>
+        </div>
       </div>
 
-      {/* Loom-Style Floating Launcher Card (Top Right) */}
-      {showLauncherModal && !isRecording && (
-        <div className="fixed top-16 right-8 w-80 bg-zinc-900 border border-zinc-800/80 rounded-2xl p-5 shadow-2xl z-50 backdrop-blur-xl text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-yellow-400 text-black flex items-center justify-center font-extrabold text-base shadow">
-                😉
-              </div>
-              <div>
-                <div className="font-extrabold text-sm text-yellow-400">DefinitelyNotLoom</div>
-                <div className="text-[11px] text-gray-400">Viking Studio Launcher</div>
-              </div>
+      {/* Primary Instructions Card (Shown when idle) */}
+      {!isRecording && !previewUrl && (
+        <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-yellow-400 text-black flex items-center justify-center font-extrabold text-2xl shrink-0 shadow-lg">
+              😉
             </div>
-            <button
-              onClick={() => setShowLauncherModal(false)}
-              className="text-gray-400 hover:text-white transition p-1"
-            >
-              <X size={16} />
-            </button>
+            <div className="space-y-1">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                How to Record Any Tab or Screen
+              </h2>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Click your <strong>DefinitelyNotLoom Extension</strong> toolbar icon on any tab within the same browser window to launch the floating recorder.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2.5 mb-4">
-            <button
-              onClick={() => setIncludeCamera(true)}
-              className={`w-full p-3 rounded-xl text-xs font-semibold text-left flex items-center justify-between transition ${
-                includeCamera ? 'bg-zinc-800 border border-yellow-400 text-white' : 'bg-zinc-950/60 border border-zinc-800 text-gray-400'
-              }`}
-            >
-              <span>🖥️ Full Screen + Camera</span>
-              {includeCamera && <span className="text-yellow-400 font-bold">✓</span>}
-            </button>
-            <button
-              onClick={() => setIncludeCamera(false)}
-              className={`w-full p-3 rounded-xl text-xs font-semibold text-left flex items-center justify-between transition ${
-                !includeCamera ? 'bg-zinc-800 border border-yellow-400 text-white' : 'bg-zinc-950/60 border border-zinc-800 text-gray-400'
-              }`}
-            >
-              <span>📷 Camera Only</span>
-              {!includeCamera && <span className="text-yellow-400 font-bold">✓</span>}
-            </button>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="bg-black/60 p-4 rounded-2xl border border-zinc-800 space-y-1.5">
+              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-yellow-400 text-black flex items-center justify-center font-extrabold text-xs">1</span>
+                Open Extension
+              </div>
+              <p className="text-zinc-300 leading-relaxed">
+                Click the <strong>DefinitelyNotLoom Extension icon</strong> in your browser toolbar (top right).
+              </p>
+            </div>
 
-          <div className="bg-zinc-950 p-3 rounded-xl mb-5 flex items-center justify-between text-xs">
-            <span className="text-gray-300">🎙️ Microphone</span>
-            <span className="text-yellow-400 font-bold">Connected</span>
-          </div>
+            <div className="bg-black/60 p-4 rounded-2xl border border-zinc-800 space-y-1.5">
+              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-yellow-400 text-black flex items-center justify-center font-extrabold text-xs">2</span>
+                Select Same-Window Tab
+              </div>
+              <p className="text-zinc-300 leading-relaxed">
+                Choose <strong>Full Screen + Camera</strong> or <strong>Camera Only</strong> for any tab inside your browser window.
+              </p>
+            </div>
 
-          <button
-            onClick={handleStartActualRecording}
-            className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm"
-          >
-            Start Recording Now
-          </button>
+            <div className="bg-black/60 p-4 rounded-2xl border border-zinc-800 space-y-1.5">
+              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-yellow-400 text-black flex items-center justify-center font-extrabold text-xs">3</span>
+                Floating Controls & Live Hub
+              </div>
+              <p className="text-zinc-300 leading-relaxed">
+                Use the right-side floating control dock over your target tab. This home screen will monitor and preview your live stream!
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Active Recording Live Monitor Screen */}
+      {/* Cinematic Live Screen Recording Widescreen Monitor */}
       {isRecording && (
-        <div className="mb-8 bg-gray-900/90 border border-yellow-400/40 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="bg-black border border-yellow-400/50 rounded-3xl p-6 shadow-2xl space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Monitor className="text-yellow-400" size={22} /> Live Recording Monitor
+              <span className="w-3.5 h-3.5 rounded-full bg-red-500 animate-ping" />
+              <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+                <Monitor className="text-yellow-400" size={24} /> Live Widescreen Monitor
               </h2>
-              <span className="text-xs bg-red-500/20 text-red-400 font-bold px-2.5 py-0.5 rounded-full border border-red-500/40">
+              <span className="text-xs bg-red-500/20 text-red-400 font-extrabold px-3 py-1 rounded-full border border-red-500/40">
                 REC • {formatTime(recordingTime)}
               </span>
             </div>
-            <div className="text-xs text-gray-400 font-mono">
-              60fps HD • Live Stream Active
+            <div className="text-xs text-zinc-400 font-mono">
+              60fps HD • Live Extension Stream Active
             </div>
           </div>
 
-          <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-gray-800 relative shadow-inner">
+          <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden border border-zinc-800 relative shadow-2xl">
             <video
               ref={(vid) => {
                 if (vid && cameraStream) {
@@ -322,283 +252,15 @@ export function StudioRecorder() {
         </div>
       )}
 
-      {/* Main Content Area */}
-      {!isRecording && !previewUrl && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Config Panel */}
-          <div className="md:col-span-2 bg-gray-900/60 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Monitor className="text-indigo-400" size={20} /> Capture Settings
-              </h2>
-
-              {/* Hardware Device Health Badge */}
-              <div className="flex items-center gap-3 bg-gray-950/80 px-3 py-1.5 rounded-xl border border-gray-800 text-xs">
-                <div className="flex items-center gap-1.5">
-                  {hasCamera ? (
-                    <span className="flex items-center gap-1 text-emerald-400 font-semibold" title={cameras[0]?.label || 'Camera Connected'}>
-                      <Video size={12} /> Cam Connected
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-amber-400 font-semibold" title="No Camera Detected">
-                      <VideoOff size={12} /> No Cam
-                    </span>
-                  )}
-                </div>
-                <div className="h-3 w-px bg-gray-800" />
-                <div className="flex items-center gap-1.5">
-                  {hasMic ? (
-                    <span className="flex items-center gap-1 text-emerald-400 font-semibold" title={microphones[0]?.label || 'Microphone Connected'}>
-                      <Mic size={12} /> Mic Connected
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-red-400 font-semibold" title="No Microphone Detected">
-                      <MicOff size={12} /> No Mic
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={refreshDevices}
-                  className="p-1 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition"
-                  title="Rescan hardware devices"
-                >
-                  <RefreshCw size={12} />
-                </button>
-              </div>
-            </div>
-
-            {/* Mode Selection */}
-            <div className="grid grid-cols-3 gap-4">
-              <button
-                onClick={() => setIncludeCamera(true)}
-                className={`p-4 rounded-2xl border text-left transition ${
-                  includeCamera
-                    ? 'border-yellow-400 bg-yellow-400/10 text-white'
-                    : 'border-gray-800 bg-gray-950/50 text-gray-400 hover:border-gray-700'
-                }`}
-              >
-                <Video size={24} className={includeCamera ? 'text-yellow-400 mb-2' : 'mb-2'} />
-                <div className="font-semibold text-sm">Screen + Cam</div>
-                <div className="text-xs text-gray-400 mt-0.5">Recommended</div>
-              </button>
-
-              <button
-                onClick={() => setIncludeCamera(false)}
-                className={`p-4 rounded-2xl border text-left transition ${
-                  !includeCamera
-                    ? 'border-yellow-400 bg-yellow-400/10 text-white'
-                    : 'border-gray-800 bg-gray-950/50 text-gray-400 hover:border-gray-700'
-                }`}
-              >
-                <Monitor size={24} className={!includeCamera ? 'text-yellow-400 mb-2' : 'mb-2'} />
-                <div className="font-semibold text-sm">Screen Only</div>
-                <div className="text-xs text-gray-400 mt-0.5">Desktop or Tab</div>
-              </button>
-
-              <button
-                onClick={() => setIncludeMic(!includeMic)}
-                className={`p-4 rounded-2xl border text-left transition ${
-                  includeMic
-                    ? 'border-emerald-500 bg-emerald-500/10 text-white'
-                    : 'border-gray-800 bg-gray-950/50 text-gray-400 hover:border-gray-700'
-                }`}
-              >
-                {includeMic ? (
-                  <Mic size={24} className="text-emerald-400 mb-2" />
-                ) : (
-                  <MicOff size={24} className="text-gray-500 mb-2" />
-                )}
-                <div className="font-semibold text-sm">Mic Audio</div>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {includeMic ? 'Noise Reduced' : 'Muted'}
-                </div>
-              </button>
-            </div>
-
-            {/* Camera Bubble Controls */}
-            {includeCamera && (
-              <div className="border-t border-gray-800 pt-6 space-y-4">
-                <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                  <Layout size={16} className="text-yellow-400" /> Camera Overlay Style
-                </h3>
-                <div className="flex items-center gap-6">
-                  {/* Shape */}
-                  <div className="flex items-center gap-2 bg-gray-950/80 p-1.5 rounded-xl border border-gray-800">
-                    <button
-                      onClick={() => setCameraShape('circle')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-                        cameraShape === 'circle'
-                          ? 'bg-yellow-400 text-black font-extrabold'
-                          : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      <Circle size={14} /> Circle
-                    </button>
-                    <button
-                      onClick={() => setCameraShape('square')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-                        cameraShape === 'square'
-                          ? 'bg-yellow-400 text-black font-extrabold'
-                          : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      <SquareIcon size={14} /> Square
-                    </button>
-                  </div>
-
-                  {/* Size */}
-                  <div className="flex items-center gap-2 bg-gray-950/80 p-1.5 rounded-xl border border-gray-800">
-                    {(['sm', 'md', 'lg'] as const).map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setCameraSize(s)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase transition ${
-                          cameraSize === s
-                            ? 'bg-yellow-400 text-black font-extrabold'
-                            : 'text-gray-400 hover:text-white'
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Error Alert Banner */}
-            {errorMessage && (
-              <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-semibold">
-                <AlertCircle size={18} className="shrink-0" />
-                <div>
-                  <div className="font-bold">Screen / Media Capture Notice</div>
-                  <div className="text-[11px] opacity-80 mt-0.5">{errorMessage}</div>
-                </div>
-              </div>
-            )}
-
-            {/* Start Button */}
-            <div className="border-t border-gray-800 pt-6">
-              <button
-                onClick={openLauncherCard}
-                className="w-full py-4 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-2xl shadow-xl hover:shadow-yellow-400/20 transition duration-200 flex items-center justify-center gap-3 text-lg"
-              >
-                <Video size={24} /> Record Your Screen
-              </button>
-            </div>
-          </div>
-
-          {/* Quick AI & Pro Features Info */}
-          <div className="bg-gray-900/60 border border-gray-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-10 h-10 rounded-2xl bg-yellow-400/20 text-yellow-400 flex items-center justify-center border border-yellow-400/30">
-                <Sparkles size={20} />
-              </div>
-              <h3 className="text-lg font-bold text-white">AI-Powered Loom Clone</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                As soon as you stop recording, our engine generates instant transcriptions, executive summaries, AI chapter markers, and interactive comment overlays.
-              </p>
-              <ul className="space-y-2 text-xs text-gray-300">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={14} className="text-yellow-400" /> Instant chunked video upload
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={14} className="text-yellow-400" /> Word-level timestamped transcripts
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={14} className="text-yellow-400" /> Edit video by editing transcript text
-                </li>
-              </ul>
-            </div>
-            <div className="text-xs text-gray-500 border-t border-gray-800 pt-4">
-              Supports Chrome, Edge, Brave, and Firefox desktop browsers.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Downloadables & Setup Guide */}
-      {!isRecording && !previewUrl && (
-        <div className="mt-8 bg-gray-900/60 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Download className="text-yellow-400" size={18} /> Downloadable Apps & Media Options
-              </h3>
-              <p className="text-xs text-gray-400 mt-0.5">
-                How to use the Windows Desktop app, Chrome Extension, and downloadable HD video files.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href="/api/download-exe"
-                download
-                className="px-3.5 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 shadow-md"
-              >
-                <Monitor size={14} /> Desktop App (.exe)
-              </a>
-              <a
-                href="/api/download-extension"
-                download
-                className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-yellow-400 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md border border-yellow-400/40"
-              >
-                <Download size={14} /> Extension (.zip)
-              </a>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
-            {/* Desktop App */}
-            <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
-              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
-                <Monitor size={14} /> 1. Windows Desktop App (.exe)
-              </div>
-              <p className="text-gray-300 leading-relaxed">
-                Click <strong>Desktop App (.exe)</strong> for 1-click download. Double-click the <code className="bg-gray-800 px-1 py-0.5 rounded text-yellow-300">.exe</code> file to run natively on Windows.
-              </p>
-              <div className="bg-yellow-400/10 p-2.5 rounded-xl border border-yellow-400/20 text-[11px] text-yellow-200 space-y-1">
-                <div className="font-semibold text-yellow-300">⚡ What to Expect:</div>
-                <ul className="list-disc list-inside space-y-0.5 text-gray-300">
-                  <li>Zero installation required (Double-click to run).</li>
-                  <li>Native floating camera overlay over all Windows apps.</li>
-                  <li>Global hotkey: Press <code className="bg-gray-800 px-1 rounded text-yellow-300">Alt+Shift+R</code> anywhere to record.</li>
-                  <li>Auto-syncs recordings to Vercel cloud with live share links.</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Chrome Extension */}
-            <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
-              <div className="font-bold text-yellow-400 flex items-center gap-1.5">
-                <Download size={14} /> 2. Chrome Extension (.zip)
-              </div>
-              <p className="text-gray-300 leading-relaxed">
-                Click <strong>Extension (.zip)</strong> and unzip the folder. Open <code className="bg-gray-800 px-1.5 py-0.5 rounded text-yellow-300 font-mono">chrome://extensions</code>, toggle <strong>Developer mode</strong> ON, click <strong>Load unpacked</strong>, and select the folder!
-              </p>
-            </div>
-
-            {/* Video File Download */}
-            <div className="bg-gray-950/80 p-4 rounded-2xl border border-gray-800 space-y-2">
-              <div className="font-bold text-emerald-400 flex items-center gap-1.5">
-                <Video size={14} /> 3. Recorded Video Files (.webm)
-              </div>
-              <p className="text-gray-300 leading-relaxed">
-                Want to save the raw video file? Click <strong>Download .webm</strong> on any recording preview or video share page to save the HD 60fps video directly to your computer!
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Live Speech Caption Ticker during Active Recording */}
+      {/* Floating Speech Caption Ticker during Active Recording */}
       {isRecording && liveTranscript.length > 0 && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/85 border border-yellow-400/30 text-yellow-300 px-5 py-2 rounded-2xl shadow-xl backdrop-blur-md text-xs font-mono max-w-lg truncate z-50 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/90 border border-yellow-400/30 text-yellow-300 px-6 py-2.5 rounded-2xl shadow-xl backdrop-blur-md text-xs font-mono max-w-xl truncate z-50 flex items-center gap-2.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
           <span className="truncate">Live Speech: "{liveTranscript[liveTranscript.length - 1].text}"</span>
         </div>
       )}
 
-      {/* Floating Right Vertical Control Dock (Loom Style on RIGHT SIDE) */}
+      {/* Right Vertical Control Dock (Loom Style on RIGHT SIDE) */}
       {isRecording && (
         <div className="fixed top-1/2 -translate-y-1/2 right-4 bg-zinc-900/95 border border-zinc-700/60 text-white p-2.5 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center gap-3 z-50">
           <div className="font-mono text-xs font-bold text-yellow-400 bg-yellow-400/15 px-2 py-1 rounded-md">
@@ -642,63 +304,12 @@ export function StudioRecorder() {
         </div>
       )}
 
-      {/* Floating Canvas Controls during Active Recording */}
-      {isRecording && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 border border-gray-800 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-xl flex items-center space-x-6 z-50">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleMuteMic}
-              className={`p-3 rounded-full transition ${isMicMuted ? 'bg-red-600/30 text-red-400' : 'bg-gray-800 hover:bg-gray-700'}`}
-              title={isMicMuted ? 'Unmute Mic' : 'Mute Mic'}
-            >
-              {isMicMuted ? <MicOff size={20} /> : <Mic size={20} />}
-            </button>
-            {/* Live VU Audio Level Meter */}
-            {!isMicMuted && (
-              <div className="flex items-end gap-0.5 h-6 w-5 bg-gray-950 p-1 rounded-md border border-gray-800" title={`Live Mic Volume: ${audioLevel}%`}>
-                <div
-                  style={{ height: `${Math.max(15, audioLevel)}%` }}
-                  className={`w-full rounded-sm transition-all duration-75 ${
-                    audioLevel > 60 ? 'bg-red-500' : audioLevel > 20 ? 'bg-emerald-400' : 'bg-yellow-400'
-                  }`}
-                />
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={toggleCamera}
-            className={`p-3 rounded-full transition ${isCameraOff ? 'bg-red-600/30 text-red-400' : 'bg-gray-800 hover:bg-gray-700'}`}
-            title={isCameraOff ? 'Turn Camera On' : 'Turn Camera Off'}
-          >
-            <Video size={20} />
-          </button>
-
-          <button
-            onClick={() => setIsAnnotating(!isAnnotating)}
-            className={`p-3 rounded-full transition ${isAnnotating ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700'}`}
-            title="Toggle Live Draw & Annotate"
-          >
-            <Pencil size={20} />
-          </button>
-
-          <div className="h-6 w-px bg-gray-800" />
-
-          <button
-            onClick={stopRecording}
-            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full transition flex items-center gap-2 shadow-lg"
-          >
-            <Square size={16} /> Finish Recording
-          </button>
-        </div>
-      )}
-
       {/* Camera Bubble Preview overlay (LEFT SIDE) */}
-      {isRecording && includeCamera && (
+      {isRecording && (
         <CameraBubble
           stream={cameraStream}
-          shape={cameraShape}
-          size={cameraSize}
+          shape="circle"
+          size="md"
           isOff={isCameraOff}
           onToggleOff={toggleCamera}
           onPositionChange={setBubblePosition}
@@ -710,27 +321,27 @@ export function StudioRecorder() {
 
       {/* Recording Complete & Instant Preview Player */}
       {previewUrl && !isRecording && (
-        <div className="bg-gray-900/80 border border-gray-800 rounded-3xl p-6 shadow-2xl space-y-6">
-          <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+        <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-6">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <CheckCircle2 className="text-emerald-400" size={22} /> Recording Ready!
               </h2>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-zinc-400 mt-1">
                 Your video was recorded and composited in real time.
               </p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={resetRecorder}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-yellow-400 text-sm font-semibold rounded-xl transition flex items-center gap-2 border border-gray-700"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-yellow-400 text-sm font-semibold rounded-xl transition flex items-center gap-2 border border-zinc-700"
                 title="Discard preview and record again"
               >
                 <RotateCcw size={16} /> Record Again
               </button>
               <button
                 onClick={handleDownload}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 border border-gray-700"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 border border-zinc-700"
               >
                 <Download size={16} /> Download .webm
               </button>
@@ -753,7 +364,7 @@ export function StudioRecorder() {
           </div>
 
           {/* Player Container */}
-          <div className="aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800 relative">
+          <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-zinc-800 relative">
             <video src={previewUrl} controls className="w-full h-full object-contain" />
           </div>
 
@@ -761,7 +372,7 @@ export function StudioRecorder() {
             <div className="bg-yellow-400/10 border border-yellow-400/30 p-4 rounded-2xl flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold text-yellow-400">Shareable Video Page Ready</div>
-                <div className="text-xs text-gray-400 font-mono mt-0.5">
+                <div className="text-xs text-zinc-400 font-mono mt-0.5">
                   {typeof window !== 'undefined' ? `${window.location.origin}/v/${uploadedVideoId}` : `/v/${uploadedVideoId}`}
                 </div>
               </div>
