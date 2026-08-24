@@ -2,11 +2,25 @@
   "name": "definitely-not-loom",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "electron:dev": "electron .",
+    "electron:dist": "electron-builder --win nsis portable"
+  },
+  "build": {
+    "appId": "com.definitelynotloom.app",
+    "productName": "DefinitelyNotLoom Studio",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "public/favicon.ico"
+    }
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1116.0",
@@ -28,6 +42,8 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.8",
     "postcss": "^8.4.45",
