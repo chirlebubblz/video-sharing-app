@@ -1,4 +1,4 @@
-// DefinitelyNotLoom Content Script - Pixel Perfect Loom UI with Native Extension Stream Permissions
+// DefinitelyNotLoom Content Script - Pixel Perfect Loom UI with Winking Viking Avatar Fallback
 (function () {
   if (window.__dnlInjected) return;
   window.__dnlInjected = true;
@@ -46,7 +46,7 @@
     launcherCardEl.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:34px;height:34px;border-radius:10px;background:#facc15;color:#000000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;">🛡️</div>
+          <div style="width:34px;height:34px;border-radius:10px;background:#facc15;color:#000000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;">😉</div>
           <div>
             <div style="font-weight:900;font-size:15px;color:#facc15;">DefinitelyNotLoom</div>
             <div style="font-size:11px;color:#a1a1aa;">Viking Studio Active</div>
@@ -110,9 +110,9 @@
     `;
 
     leftDockEl.innerHTML = `
-      <div id="dnl-timer" style="font-family:monospace;font-size:13px;font-weight:800;color:#ef4444;background:rgba(239,68,68,0.15);padding:4px 8px;border-radius:8px;">00:00</div>
+      <div id="dnl-timer" style="font-family:monospace;font-size:13px;font-weight:800;color:#facc15;background:rgba(250,204,21,0.15);padding:4px 8px;border-radius:8px;">00:00</div>
       <button id="dnl-left-pause" title="Pause / Resume" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">⏸️</button>
-      <button id="dnl-left-restart" title="Restart" style="background:#27272a;border:none;color:#fbbf24;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">🔄</button>
+      <button id="dnl-left-cam-toggle" title="Toggle Camera Bubble" style="background:#27272a;border:none;color:#facc15;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">📷</button>
       <button id="dnl-left-pen" title="Draw Pen" style="background:#27272a;border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">✏️</button>
       <button id="dnl-left-trash" title="Cancel" style="background:#27272a;border:none;color:#f87171;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">🗑️</button>
       <button id="dnl-left-finish" title="Finish Recording" style="background:#22c55e;border:none;color:white;width:40px;height:40px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(34,197,94,0.4);">✓</button>
@@ -121,13 +121,13 @@
     document.body.appendChild(leftDockEl);
 
     document.getElementById('dnl-left-pause').addEventListener('click', togglePause);
-    document.getElementById('dnl-left-restart').addEventListener('click', restartRecording);
+    document.getElementById('dnl-left-cam-toggle').addEventListener('click', toggleCameraBubble);
     document.getElementById('dnl-left-pen').addEventListener('click', togglePen);
     document.getElementById('dnl-left-trash').addEventListener('click', cancelRecording);
     document.getElementById('dnl-left-finish').addEventListener('click', stopRecordingAndUpload);
   }
 
-  // 3. Render Bottom-Left Loom Camera Bubble
+  // 3. Render Bottom-Left Loom Camera Bubble with Avatar Fallback
   function showCameraBubble() {
     if (document.getElementById('dnl-camera-bubble')) return;
 
@@ -137,27 +137,54 @@
       position: fixed;
       bottom: 24px;
       left: 24px;
-      width: 220px;
-      height: 145px;
-      border-radius: 16px;
+      width: 200px;
+      height: 140px;
+      border-radius: 18px;
       border: 3px solid #facc15;
-      box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.7);
       z-index: 2147483646;
       overflow: hidden;
       background: #09090b;
       cursor: move;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     `;
+
+    // Fallback Avatar (Winking Viking Smiley)
+    const fallbackAvatar = document.createElement('div');
+    fallbackAvatar.id = 'dnl-cam-fallback';
+    fallbackAvatar.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#18181b;color:#facc15;font-family:sans-serif;z-index:1;';
+    fallbackAvatar.innerHTML = `
+      <div style="font-size:36px;margin-bottom:2px;">😉</div>
+      <div style="font-size:11px;font-weight:700;color:#e4e4e7;">Viking Cam Ready</div>
+    `;
+    cameraBubbleEl.appendChild(fallbackAvatar);
 
     const video = document.createElement('video');
     video.id = 'dnl-cam-video';
     video.autoplay = true;
     video.muted = true;
     video.playsInline = true;
-    video.style.cssText = 'width:100%;height:100%;object-fit:cover;transform:scaleX(-1);';
+    video.style.cssText = 'position:relative;z-index:2;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);';
+
+    video.onplaying = () => {
+      fallbackAvatar.style.display = 'none';
+    };
+
     cameraBubbleEl.appendChild(video);
 
     makeDraggable(cameraBubbleEl);
     document.body.appendChild(cameraBubbleEl);
+  }
+
+  function toggleCameraBubble() {
+    if (!cameraBubbleEl) return;
+    if (cameraBubbleEl.style.display === 'none') {
+      cameraBubbleEl.style.display = 'flex';
+    } else {
+      cameraBubbleEl.style.display = 'none';
+    }
   }
 
   // 4. Render Canvas Overlay for Live Pen Annotations
@@ -192,8 +219,8 @@
       ctx.beginPath();
       ctx.moveTo(lastX, lastY);
       ctx.lineTo(e.clientX, e.clientY);
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 5;
       ctx.lineCap = 'round';
       ctx.stroke();
       lastX = e.clientX;
@@ -226,7 +253,7 @@
       mediaRecorder.resume();
       isPaused = false;
       if (btn) btn.innerText = '⏸️';
-      if (timerEl) timerEl.style.color = '#ef4444';
+      if (timerEl) timerEl.style.color = '#facc15';
     } else {
       mediaRecorder.pause();
       isPaused = true;
@@ -241,10 +268,12 @@
     if (isPenActive) {
       canvasEl.style.pointerEvents = 'auto';
       canvasEl.style.cursor = 'crosshair';
-      if (btn) btn.style.background = '#6366f1';
+      if (btn) btn.style.background = '#facc15';
+      if (btn) btn.style.color = '#000000';
     } else {
       canvasEl.style.pointerEvents = 'none';
       if (btn) btn.style.background = '#27272a';
+      if (btn) btn.style.color = 'white';
     }
   }
 

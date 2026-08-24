@@ -11,16 +11,17 @@
   <path d="M 140 180 C 140 120, 372 120, 372 180 C 372 200, 140 200, 140 180 Z" fill="#FACC15" stroke="#000000" stroke-width="6"/>
   <rect x="236" y="115" width="40" height="75" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="4"/>
   
-  <!-- Smiley Face Base (Yellow Circle) -->
+  <!-- Winking Smiley Face Base (Yellow Circle) -->
   <circle cx="256" cy="310" r="140" fill="#FACC15" stroke="#FFFFFF" stroke-width="10"/>
   
-  <!-- Smiley Eyes -->
-  <circle cx="206" cy="280" r="18" fill="#000000"/>
-  <circle cx="306" cy="280" r="18" fill="#000000"/>
-  <circle cx="212" cy="274" r="6" fill="#FFFFFF"/>
-  <circle cx="312" cy="274" r="6" fill="#FFFFFF"/>
+  <!-- Left Eye: Open Eye -->
+  <circle cx="196" cy="275" r="18" fill="#000000"/>
+  <circle cx="202" cy="269" r="6" fill="#FFFFFF"/>
+  
+  <!-- Right Eye: Winking Eye (Playful Wink Arch 😉) -->
+  <path d="M 285 285 Q 315 255 345 285" fill="none" stroke="#000000" stroke-width="14" stroke-linecap="round"/>
   
   <!-- Viking Mustache / Big Smile -->
-  <path d="M 180 330 Q 256 390 332 330" fill="none" stroke="#000000" stroke-width="16" stroke-linecap="round"/>
-  <path d="M 170 320 C 190 350, 230 360, 256 345 C 282 360, 322 350, 342 320 C 310 375, 202 375, 170 320 Z" fill="#000000"/>
+  <path d="M 180 335 Q 256 395 332 335" fill="none" stroke="#000000" stroke-width="16" stroke-linecap="round"/>
+  <path d="M 170 325 C 190 355, 230 365, 256 350 C 282 365, 322 355, 342 325 C 310 380, 202 380, 170 325 Z" fill="#000000"/>
 </svg>
