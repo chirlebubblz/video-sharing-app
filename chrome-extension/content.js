@@ -71,7 +71,7 @@
       </div>
 
       <button id="dnl-btn-start-record" style="width:100%;background:#facc15;border:none;color:#000000;padding:14px;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(250,204,21,0.25);transition:transform 0.1s;">
-        Start Recording
+        Record Your Screen
       </button>
     `;
 

@@ -147,8 +147,8 @@ export function StudioRecorder() {
               <Download size={12} /> Extension (.zip)
             </a>
           </h1>
-          <p className="text-gray-400 mt-1 text-sm">
-            Record screen, camera, and mixed audio with real-time chunk streaming & AI transcription ready.
+          <p className="text-gray-400 mt-1 text-sm font-medium">
+            Record your screen, camera, and audio with real-time AI transcriptions & instant shareable links.
           </p>
         </div>
 
@@ -348,7 +348,7 @@ export function StudioRecorder() {
                 onClick={handleStart}
                 className="w-full py-4 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-2xl shadow-xl hover:shadow-yellow-400/20 transition duration-200 flex items-center justify-center gap-3 text-lg"
               >
-                <Video size={24} /> Start Recording
+                <Video size={24} /> Record Your Screen
               </button>
             </div>
           </div>
