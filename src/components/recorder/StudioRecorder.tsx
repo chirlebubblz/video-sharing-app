@@ -164,7 +164,7 @@ export function StudioRecorder() {
           <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-3">
             <img src="/icon.svg" alt="Winking Smiley Logo" className="w-8 h-8 shrink-0 drop-shadow-md" />
             <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
-              Not Anothe Video Sharing App
+              Not Another Video Sharing App
             </span>
             <span className="text-xs bg-yellow-400/20 text-yellow-300 font-bold px-3 py-1 rounded-full border border-yellow-400/40">
               HD 60fps

@@ -108,7 +108,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <img src="/icon.svg" alt="Winking Smiley Logo" className="w-9 h-9 shrink-0 drop-shadow" />
             <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
-              Not Anothe Video Sharing App
+              Not Another Video Sharing App
             </span>
           </div>
 

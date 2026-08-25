@@ -1,7 +1,7 @@
 // Not Anothe Video Sharing App - Google Drive Storage Engine
 // Uses Google Drive API v3 to save screen recordings into user's own Google Drive
 
-const DRIVE_FOLDER_NAME = 'Not Anothe Video Sharing App';
+const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
 
 /**
  * Get Google OAuth2 Access Token using chrome.identity API
