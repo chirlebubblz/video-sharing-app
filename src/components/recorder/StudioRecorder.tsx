@@ -158,22 +158,11 @@ export function StudioRecorder() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-4 space-y-6">
-      {/* Studio Header Bar */}
-      <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            <img src="/icon.svg" alt="Winking Smiley Logo" className="w-8 h-8 shrink-0 drop-shadow-md" />
-            <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
-              Not Another Video Sharing App
-            </span>
-            <span className="text-xs bg-yellow-400/20 text-yellow-300 font-bold px-3 py-1 rounded-full border border-yellow-400/40">
-              HD 60fps
-            </span>
-          </h1>
-          <p className="text-zinc-400 mt-1 text-xs font-medium">
-            Record your screen, speak your mind, and share your video in seconds.
-          </p>
-        </div>
+      {/* Studio Top Action Bar */}
+      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+        <p className="text-zinc-400 text-xs font-medium">
+          Record your screen, speak your mind, and share your video in seconds.
+        </p>
 
         <div className="flex items-center gap-2">
           <a
