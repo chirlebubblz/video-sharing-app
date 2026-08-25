@@ -70,23 +70,27 @@ export async function POST(req: NextRequest) {
       const finalTranscripts = parsedLiveTranscript && parsedLiveTranscript.length > 0 ? parsedLiveTranscript : aiResult.transcripts;
 
       try {
+        const cleanTranscripts = Array.isArray(finalTranscripts)
+          ? finalTranscripts
+              .filter((t: any) => t && typeof t.text === 'string')
+              .map((t: any) => ({
+                start: typeof t.start === 'number' ? t.start : 0.0,
+                end: typeof t.end === 'number' ? t.end : 1.0,
+                text: String(t.text),
+                isFiller: Boolean(t.isFiller),
+              }))
+          : [];
+
         const video = await db.video.create({
           data: {
             id: videoId,
-            title: aiResult.title,
-            summary: aiResult.summary,
-            actionItems: JSON.stringify(aiResult.actionItems),
-            chapters: JSON.stringify(aiResult.chapters),
+            title: aiResult.title || 'DefinitelyNotLoom Recording',
+            summary: aiResult.summary || 'Recorded screen video session.',
+            actionItems: JSON.stringify(aiResult.actionItems || []),
+            chapters: JSON.stringify(aiResult.chapters || []),
             videoUrl,
             duration: 32.0,
-            transcripts: {
-              create: finalTranscripts.map((t: { start: number; end: number; text: string; isFiller?: boolean }) => ({
-                start: t.start,
-                end: t.end,
-                text: t.text,
-                isFiller: t.isFiller || false,
-              })),
-            },
+            transcripts: cleanTranscripts.length > 0 ? { create: cleanTranscripts } : undefined,
           },
         });
 
@@ -96,11 +100,30 @@ export async function POST(req: NextRequest) {
           videoUrl: video.videoUrl,
         });
       } catch (dbErr) {
-        return NextResponse.json({
-          success: true,
-          videoId,
-          videoUrl,
-        });
+        console.error('Primary db.video.create error:', dbErr);
+        try {
+          const video = await db.video.create({
+            data: {
+              id: videoId,
+              title: aiResult.title || 'DefinitelyNotLoom Recording',
+              summary: aiResult.summary || 'Recorded screen video session.',
+              videoUrl,
+              duration: 32.0,
+            },
+          });
+          return NextResponse.json({
+            success: true,
+            videoId: video.id,
+            videoUrl: video.videoUrl,
+          });
+        } catch (dbErr2) {
+          console.error('Fallback db.video.create error:', dbErr2);
+          return NextResponse.json({
+            success: true,
+            videoId,
+            videoUrl,
+          });
+        }
       }
     }
 
@@ -108,7 +131,7 @@ export async function POST(req: NextRequest) {
     const videoId = customVideoId || `vid-${Date.now()}`;
     const filename = `${videoId}.webm`;
     
-    let videoUrl = `/uploads/${filename}`;
+    let videoUrl = `/api/video/stream/${videoId}`;
     if (videoFile) {
       const buffer = Buffer.from(await videoFile.arrayBuffer());
       videoUrl = await uploadVideoToStorage(buffer, filename);
@@ -125,23 +148,27 @@ export async function POST(req: NextRequest) {
     const finalTranscripts = parsedLiveTranscript && parsedLiveTranscript.length > 0 ? parsedLiveTranscript : aiResult.transcripts;
 
     try {
+      const cleanTranscripts = Array.isArray(finalTranscripts)
+        ? finalTranscripts
+            .filter((t: any) => t && typeof t.text === 'string')
+            .map((t: any) => ({
+              start: typeof t.start === 'number' ? t.start : 0.0,
+              end: typeof t.end === 'number' ? t.end : 1.0,
+              text: String(t.text),
+              isFiller: Boolean(t.isFiller),
+            }))
+        : [];
+
       const video = await db.video.create({
         data: {
           id: videoId,
-          title: aiResult.title,
-          summary: aiResult.summary,
-          actionItems: JSON.stringify(aiResult.actionItems),
-          chapters: JSON.stringify(aiResult.chapters),
+          title: aiResult.title || 'DefinitelyNotLoom Recording',
+          summary: aiResult.summary || 'Recorded screen video session.',
+          actionItems: JSON.stringify(aiResult.actionItems || []),
+          chapters: JSON.stringify(aiResult.chapters || []),
           videoUrl,
           duration: 32.0,
-          transcripts: {
-            create: finalTranscripts.map((t: { start: number; end: number; text: string; isFiller?: boolean }) => ({
-              start: t.start,
-              end: t.end,
-              text: t.text,
-              isFiller: t.isFiller || false,
-            })),
-          },
+          transcripts: cleanTranscripts.length > 0 ? { create: cleanTranscripts } : undefined,
         },
       });
 
@@ -151,11 +178,30 @@ export async function POST(req: NextRequest) {
         videoUrl: video.videoUrl,
       });
     } catch (dbErr) {
-      return NextResponse.json({
-        success: true,
-        videoId,
-        videoUrl,
-      });
+      console.error('Primary db.video.create error:', dbErr);
+      try {
+        const video = await db.video.create({
+          data: {
+            id: videoId,
+            title: aiResult.title || 'DefinitelyNotLoom Recording',
+            summary: aiResult.summary || 'Recorded screen video session.',
+            videoUrl,
+            duration: 32.0,
+          },
+        });
+        return NextResponse.json({
+          success: true,
+          videoId: video.id,
+          videoUrl: video.videoUrl,
+        });
+      } catch (dbErr2) {
+        console.error('Fallback db.video.create error:', dbErr2);
+        return NextResponse.json({
+          success: true,
+          videoId,
+          videoUrl,
+        });
+      }
     }
   } catch (err) {
     console.error('Error handling video chunk upload:', err);
