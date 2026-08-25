@@ -158,23 +158,7 @@ export function StudioRecorder() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-4 space-y-6">
-      {/* Studio Top Action Bar */}
-      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
-        <p className="text-zinc-400 text-xs font-medium">
-          Record your screen, speak your mind, and share your video in seconds.
-        </p>
 
-        <div className="flex items-center gap-2">
-          <a
-            href="/api/download-extension"
-            download
-            className="text-xs bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-lg"
-            title="Download Chrome Extension (.zip)"
-          >
-            <Puzzle size={16} /> Get Browser Extension
-          </a>
-        </div>
-      </div>
 
       {/* BIG WIDESCREEN LIVE RECORDING MONITOR (Front & Center) */}
       <div className="bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 shadow-2xl space-y-4">

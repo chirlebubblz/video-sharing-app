@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StudioRecorder } from '@/components/recorder/StudioRecorder';
-import { Video, Play, Clock, Eye, Sparkles, Film, Trash2 } from 'lucide-react';
+import { Video, Play, Clock, Eye, Film, Trash2, Puzzle } from 'lucide-react';
 
 export default function Home() {
   const [userVideos, setUserVideos] = useState<any[]>([]);
@@ -113,9 +113,14 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4 text-xs font-semibold">
-            <span className="flex items-center gap-1.5 text-yellow-400 bg-yellow-400/10 px-3.5 py-1.5 rounded-full border border-yellow-400/30">
-              <Sparkles size={14} /> Ready to record
-            </span>
+            <a
+              href="/api/download-extension"
+              download
+              className="text-xs bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-lg"
+              title="Download Chrome Extension (.zip)"
+            >
+              <Puzzle size={16} /> Get Browser Extension
+            </a>
           </div>
         </div>
       </nav>
