@@ -1,4 +1,4 @@
-// Not Anothe Video Sharing App - Google Drive Storage Engine
+// Not Another Video Sharing App - Google Drive Storage Engine
 // Uses Google Drive API v3 to save screen recordings into user's own Google Drive
 
 const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
