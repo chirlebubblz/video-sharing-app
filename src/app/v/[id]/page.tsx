@@ -140,7 +140,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
             <a href="/" className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight">
               <img src="/icon.svg" alt="Viking Smiley Logo" className="w-8 h-8 shrink-0 drop-shadow" />
               <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
-                DefinitelyNotLoom
+                Not Anothe Video Sharing App
               </span>
             </a>
           </div>

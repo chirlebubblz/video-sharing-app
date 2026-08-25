@@ -106,12 +106,9 @@ export default function Home() {
       <nav className="border-b border-zinc-800/80 bg-black/90 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/icon.svg?v=3" alt="Viking Smiley Logo" className="w-9 h-9 shrink-0 drop-shadow" />
+            <img src="/icon.svg" alt="Winking Smiley Logo" className="w-9 h-9 shrink-0 drop-shadow" />
             <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
-              DefinitelyNotLoom
-            </span>
-            <span className="text-xs text-zinc-400 font-mono italic hidden sm:inline">
-              (Totally not Loom... but not really)
+              Not Anothe Video Sharing App
             </span>
           </div>
 
@@ -135,7 +132,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
               <Video className="text-yellow-400" size={22} /> Your Video Library
             </h2>
-            <p className="text-xs text-zinc-400 mt-1">Videos recorded via your Chrome Extension will automatically appear here.</p>
+            <p className="text-xs text-zinc-400 mt-1">Videos you record with the browser extension will show up here automatically.</p>
           </div>
         </div>
 
@@ -147,7 +144,7 @@ export default function Home() {
             <div className="space-y-1.5 max-w-sm mx-auto">
               <h3 className="text-xl font-bold text-white">Your Video Library is Empty</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Click your <span className="text-yellow-400 font-bold">DefinitelyNotLoom Extension</span> icon to record your first video. Your completed recordings will be saved here automatically!
+                Click the <span className="text-yellow-400 font-bold">😉 extension icon</span> in your browser toolbar to start recording. Your videos will save right here!
               </p>
             </div>
           </div>

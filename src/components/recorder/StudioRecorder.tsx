@@ -162,16 +162,16 @@ export function StudioRecorder() {
       <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            <img src="/icon.svg" alt="Viking Smiley Logo" className="w-8 h-8 shrink-0 drop-shadow-md" />
+            <img src="/icon.svg" alt="Winking Smiley Logo" className="w-8 h-8 shrink-0 drop-shadow-md" />
             <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
-              DefinitelyNotLoom Studio
+              Not Anothe Video Sharing App
             </span>
             <span className="text-xs bg-yellow-400/20 text-yellow-300 font-bold px-3 py-1 rounded-full border border-yellow-400/40">
               HD 60fps
             </span>
           </h1>
           <p className="text-zinc-400 mt-1 text-xs font-medium">
-            Show, don't tell. Record your screen & face in seconds, and watch your live stream right here.
+            Record your screen, speak your mind, and share your video in seconds.
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export function StudioRecorder() {
               </span>
             ) : (
               <span className="text-xs bg-yellow-400/10 text-yellow-400 font-bold px-3 py-1 rounded-full border border-yellow-400/30">
-                Stage Ready
+                Ready to Record
               </span>
             )}
           </div>
@@ -241,7 +241,7 @@ export function StudioRecorder() {
                     Live Broadcast Active
                   </h3>
                   <p className="text-xs text-yellow-300 font-mono">
-                    Recording session in progress across browser tabs • 60fps HD
+                    Recording live across browser tabs • 60fps HD
                   </p>
                 </div>
               </div>
@@ -255,10 +255,10 @@ export function StudioRecorder() {
               </div>
               <div className="space-y-1.5 max-w-md">
                 <h3 className="text-2xl font-black text-white tracking-tight">
-                  Your stage is set!
+                  Your screen is ready!
                 </h3>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Hit your <span className="text-yellow-400 font-bold">DefinitelyNotLoom Extension</span> icon to start recording. We'll show your live preview right here on this screen.
+                  Click your <span className="text-yellow-400 font-bold">😉 extension icon</span> in your browser toolbar to start recording. We'll show your live preview right here.
                 </p>
               </div>
             </div>

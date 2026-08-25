@@ -1,19 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "DefinitelyNotLoom Floating Screen Recorder",
-  "version": "1.0.0",
-  "description": "Floating camera bubble, drawing pen, and real-time screen recorder over all websites.",
-  "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
-  },
+  "name": "Not Anothe Video Sharing App",
+  "version": "1.0",
+  "description": "Record your screen and face easily, and save your videos to Google Drive.",
   "permissions": [
+    "desktopCapture",
     "activeTab",
     "scripting",
     "storage",
-    "desktopCapture",
-    "offscreen"
+    "identity"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -21,20 +16,30 @@
   "background": {
     "service_worker": "background.js"
   },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.svg",
+      "48": "icon.svg",
+      "128": "icon.svg"
+    }
+  },
+  "icons": {
+    "16": "icon.svg",
+    "48": "icon.svg",
+    "128": "icon.svg"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["driveStorage.js", "content.js"],
       "run_at": "document_end"
     }
   ],
-  "action": {
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    },
-    "default_popup": "popup.html",
-    "default_title": "DefinitelyNotLoom Recorder"
-  }
+  "web_accessible_resources": [
+    {
+      "resources": ["permission.html", "permission.js", "icon.svg", "driveStorage.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
