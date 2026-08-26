@@ -5,13 +5,13 @@ const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
 const GOOGLE_CLIENT_ID = '249176329339-7ci3o23tf1r0of2ohu58matoe3d2b85s.apps.googleusercontent.com';
 
 /**
- * Get Google OAuth2 Access Token with real Google Client ID
+ * Get Google OAuth2 Access Token using native chrome.identity API
  */
 async function getGoogleDriveAuthToken(interactive = true) {
   return new Promise((resolve, reject) => {
     if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken) {
       chrome.identity.getAuthToken({ interactive }, (token) => {
-        if (!chrome.runtime.lastError && token) {
+        if (token && !chrome.runtime.lastError) {
           return resolve(token);
         }
         openGoogleAuthFallback(resolve, reject);
@@ -24,7 +24,7 @@ async function getGoogleDriveAuthToken(interactive = true) {
 
 function openGoogleAuthFallback(resolve, reject) {
   try {
-    const redirectUrl = chrome.identity ? chrome.identity.getRedirectURL() : 'https://video-sharing-app-jordan.vercel.app/';
+    const redirectUrl = chrome.identity && chrome.identity.getRedirectURL ? chrome.identity.getRedirectURL() : 'https://video-sharing-app-jordan.vercel.app/';
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`;
     
     if (chrome.identity && chrome.identity.launchWebAuthFlow) {
@@ -33,7 +33,7 @@ function openGoogleAuthFallback(resolve, reject) {
           const token = responseUrl.match(/access_token=([^&]+)/)?.[1];
           if (token) return resolve(token);
         }
-        reject(new Error('Google authentication canceled'));
+        reject(new Error('Google authentication canceled or redirect_uri mismatch'));
       });
     } else {
       window.open(authUrl, '_blank');
