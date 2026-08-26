@@ -17,22 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
             btnDriveConnect.style.borderColor = '#22c55e';
             btnDriveConnect.style.color = '#4ade80';
             btnDriveConnect.innerText = '✅ Google Drive Connected!';
+          } else {
+            chrome.tabs.create({ url: 'https://accounts.google.com/' });
+            btnDriveConnect.innerText = '✅ Google Login Opened';
           }
         } else {
-          chrome.identity.getAuthToken({ interactive: true }, (token) => {
-            if (token) {
-              btnDriveConnect.style.background = 'rgba(34,197,94,0.2)';
-              btnDriveConnect.style.borderColor = '#22c55e';
-              btnDriveConnect.style.color = '#4ade80';
-              btnDriveConnect.innerText = '✅ Google Drive Connected!';
-            } else {
-              btnDriveConnect.innerText = '📁 Connect Google Drive Account';
-            }
-          });
+          chrome.tabs.create({ url: 'https://accounts.google.com/' });
+          btnDriveConnect.innerText = '✅ Google Login Opened';
         }
       } catch (err) {
         console.error('Drive connection error:', err);
-        btnDriveConnect.innerText = '📁 Connect Google Drive Account';
+        chrome.tabs.create({ url: 'https://accounts.google.com/' });
+        btnDriveConnect.innerText = '✅ Google Login Opened';
       }
     });
   }

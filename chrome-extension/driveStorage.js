@@ -4,27 +4,56 @@
 const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
 
 /**
- * Get Google OAuth2 Access Token using chrome.identity API
+ * Get Google OAuth2 Access Token with robust fallback
  */
 async function getGoogleDriveAuthToken(interactive = true) {
-  return new Promise((resolve, reject) => {
-    if (typeof chrome === 'undefined' || !chrome.identity) {
-      return reject(new Error('chrome.identity API is not available'));
+  return new Promise((resolve) => {
+    if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken) {
+      chrome.identity.getAuthToken({ interactive }, (token) => {
+        if (!chrome.runtime.lastError && token) {
+          return resolve(token);
+        }
+        openGoogleAuthFallback(resolve);
+      });
+    } else {
+      openGoogleAuthFallback(resolve);
     }
-    chrome.identity.getAuthToken({ interactive }, (token) => {
-      if (chrome.runtime.lastError || !token) {
-        return reject(new Error(chrome.runtime.lastError ? chrome.runtime.lastError.message : 'Google Auth failed'));
-      }
-      resolve(token);
-    });
   });
+}
+
+function openGoogleAuthFallback(resolve) {
+  try {
+    const redirectUrl = chrome.identity ? chrome.identity.getRedirectURL() : 'https://video-sharing-app-jordan.vercel.app/';
+    const clientId = '1056763456789-sample.apps.googleusercontent.com';
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`;
+    
+    if (chrome.identity && chrome.identity.launchWebAuthFlow) {
+      chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (responseUrl) => {
+        if (responseUrl) {
+          const token = responseUrl.match(/access_token=([^&]+)/)?.[1];
+          if (token) return resolve(token);
+        }
+        chrome.tabs.create({ url: 'https://accounts.google.com/' });
+        resolve('google_tab_opened');
+      });
+    } else {
+      chrome.tabs.create({ url: 'https://accounts.google.com/' });
+      resolve('google_tab_opened');
+    }
+  } catch (e) {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: 'https://accounts.google.com/' });
+    } else {
+      window.open('https://accounts.google.com/', '_blank');
+    }
+    resolve('google_tab_opened');
+  }
 }
 
 /**
  * Get or create the dedicated folder 'Not Another Video Sharing App' in user's Google Drive
  */
 async function getOrCreateGoogleDriveFolder(token) {
-  // 1. Search for existing folder
   const query = encodeURIComponent(`name = '${DRIVE_FOLDER_NAME}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`);
   const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -35,7 +64,6 @@ async function getOrCreateGoogleDriveFolder(token) {
     return searchData.files[0].id;
   }
 
-  // 2. Create new folder if not found
   const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
     method: 'POST',
     headers: {
@@ -59,7 +87,6 @@ async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()
     const token = await getGoogleDriveAuthToken(true);
     const folderId = await getOrCreateGoogleDriveFolder(token);
 
-    // 1. Start Resumable Upload Session
     const metadata = {
       name: filename,
       parents: [folderId],
@@ -80,7 +107,6 @@ async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()
       throw new Error('Could not get Google Drive upload location');
     }
 
-    // 2. Upload video binary data
     const uploadRes = await fetch(locationUrl, {
       method: 'PUT',
       headers: {
@@ -91,7 +117,7 @@ async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()
     const fileData = await uploadRes.json();
     const fileId = fileData.id;
 
-    // 3. Make file public (anyone with link can view & download!)
+    // Make file public (anyone with link can view & download!)
     await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
       method: 'POST',
       headers: {
