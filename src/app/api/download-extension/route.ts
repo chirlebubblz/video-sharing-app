@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': 'attachment; filename="DefinitelyNotLoom-Chrome-Extension.zip"',
+        'Content-Disposition': 'attachment; filename="Not-Another-Video-Sharing-App-Extension.zip"',
       },
     });
   } catch (err) {

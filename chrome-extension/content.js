@@ -48,7 +48,7 @@
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:34px;height:34px;border-radius:10px;background:#facc15;color:#000000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;">😉</div>
           <div>
-            <div style="font-weight:900;font-size:15px;color:#facc15;">DefinitelyNotLoom</div>
+            <div style="font-weight:900;font-size:15px;color:#facc15;">Not Another Video Sharing App</div>
             <div style="font-size:11px;color:#a1a1aa;">Viking Studio Active</div>
           </div>
         </div>

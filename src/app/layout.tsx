@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'DefinitelyNotLoom | Totally Not Loom... But Not Really',
-  description: 'Record screen, camera, and mixed audio with real-time chunk streaming and AI video intelligence.',
+  title: 'Not Another Video Sharing App',
+  description: 'Record your screen, speak your mind, and share your video in seconds.',
   icons: {
     icon: '/icon.svg?v=3',
     shortcut: '/icon.svg?v=3',
