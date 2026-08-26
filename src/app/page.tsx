@@ -8,52 +8,24 @@ export default function Home() {
   const [userVideos, setUserVideos] = useState<any[]>([]);
 
   useEffect(() => {
-    // 1. Fetch saved videos live from Supabase Database API & merge with localStorage
-    fetch('/api/videos')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.success && Array.isArray(data.videos)) {
-          const dbVids = data.videos;
-          const saved = localStorage.getItem('dnl_my_videos');
-          let localVids: any[] = [];
-          if (saved) {
-            try {
-              localVids = JSON.parse(saved) || [];
-            } catch (e) {}
-          }
-          const merged = [...dbVids];
-          localVids.forEach((lv) => {
-            if (lv.id !== 'vid-demo-1' && lv.id !== 'vid-demo-2' && !merged.some((mv) => mv.id === lv.id)) {
-              merged.push(lv);
-            }
-          });
-          setUserVideos(merged);
-          try {
-            localStorage.setItem('dnl_my_videos', JSON.stringify(merged));
-          } catch (e) {}
+    // 1. Purge old test cache & load Google Drive videos from storage
+    try {
+      localStorage.removeItem('dnl_my_videos'); // Clear old test entries permanently
+      const savedDriveVids = localStorage.getItem('navsa_drive_videos');
+      if (savedDriveVids) {
+        const parsed = JSON.parse(savedDriveVids);
+        if (Array.isArray(parsed)) {
+          setUserVideos(parsed);
         }
-      })
-      .catch(() => {
-        const saved = localStorage.getItem('dnl_my_videos');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) {
-              const filtered = parsed.filter((v) => v.id !== 'vid-demo-1' && v.id !== 'vid-demo-2');
-              setUserVideos(filtered);
-            }
-          } catch (e) {}
-        }
-      });
+      }
+    } catch (e) {}
 
-    // 2. Real-time BroadcastChannel & Window postMessage sync across tabs
+    // 2. Real-time broadcast listener for newly completed Google Drive recordings
     const handleNewVideo = (newVid: any) => {
-      if (newVid.id === 'vid-demo-1' || newVid.id === 'vid-demo-2') return;
       setUserVideos((prev) => {
-        const cleanPrev = prev.filter((v) => v.id !== 'vid-demo-1' && v.id !== 'vid-demo-2');
-        const updated = [newVid, ...cleanPrev.filter((v) => v.id !== newVid.id)];
+        const updated = [newVid, ...prev.filter((v) => v.id !== newVid.id)];
         try {
-          localStorage.setItem('dnl_my_videos', JSON.stringify(updated));
+          localStorage.setItem('navsa_drive_videos', JSON.stringify(updated));
         } catch (err) {}
         return updated;
       });
@@ -88,16 +60,10 @@ export default function Home() {
     setUserVideos((prev) => {
       const updated = prev.filter((v) => v.id !== videoId);
       try {
-        localStorage.setItem('dnl_my_videos', JSON.stringify(updated));
+        localStorage.setItem('navsa_drive_videos', JSON.stringify(updated));
       } catch (err) {}
       return updated;
     });
-
-    try {
-      await fetch(`/api/video/${videoId}`, { method: 'DELETE' });
-    } catch (err) {
-      console.error('Delete error:', err);
-    }
   };
 
   return (
@@ -137,7 +103,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
               <Video className="text-yellow-400" size={22} /> Your Video Library
             </h2>
-            <p className="text-xs text-zinc-400 mt-1">Videos you record with the browser extension will show up here automatically.</p>
+            <p className="text-xs text-zinc-400 mt-1">Videos saved in your Google Drive will appear here automatically.</p>
           </div>
         </div>
 
@@ -149,7 +115,7 @@ export default function Home() {
             <div className="space-y-1.5 max-w-sm mx-auto">
               <h3 className="text-xl font-bold text-white">Your Video Library is Empty</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Click the <span className="text-yellow-400 font-bold">😉 extension icon</span> in your browser toolbar to start recording. Your videos will save right here!
+                Click the <span className="text-yellow-400 font-bold">😉 extension icon</span> in your browser toolbar to record a video. Your recordings save directly to your <span className="text-yellow-400 font-bold">Google Drive</span>!
               </p>
             </div>
           </div>
@@ -158,7 +124,9 @@ export default function Home() {
             {userVideos.map((video) => (
               <a
                 key={video.id}
-                href={`/v/${video.id}`}
+                href={video.driveViewUrl || `/v/${video.id}`}
+                target={video.driveViewUrl ? '_blank' : '_self'}
+                rel="noreferrer"
                 className="group bg-zinc-900/60 border border-zinc-800 hover:border-yellow-400/50 rounded-3xl overflow-hidden shadow-xl transition-all duration-200 flex flex-col justify-between relative"
               >
                 <div className={`aspect-video ${video.thumbnail || 'bg-gradient-to-tr from-yellow-950 via-zinc-900 to-black'} relative flex items-center justify-center p-4 border-b border-zinc-800`}>
@@ -173,7 +141,7 @@ export default function Home() {
                     <Play size={24} className="ml-1 fill-black" />
                   </div>
                   <span className="absolute bottom-3 right-3 bg-black/80 font-mono text-xs text-yellow-400 px-2.5 py-1 rounded-md border border-zinc-700">
-                    {video.duration}
+                    {video.duration || '0:32'}
                   </span>
                 </div>
 
