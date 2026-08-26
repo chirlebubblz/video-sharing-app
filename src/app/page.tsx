@@ -106,7 +106,7 @@ export default function Home() {
       <nav className="border-b border-zinc-800/80 bg-black/90 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/icon.svg" alt="Winking Smiley Logo" className="w-9 h-9 shrink-0 drop-shadow" />
+            <img src="/logo.svg" alt="Winking Smiley Logo" className="w-9 h-9 shrink-0 drop-shadow" />
             <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-yellow-400 via-amber-300 to-white text-transparent bg-clip-text">
               Not Another Video Sharing App
             </span>
