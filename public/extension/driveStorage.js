@@ -2,30 +2,30 @@
 // Uses Google Drive API v3 to save screen recordings directly into user's own Google Drive
 
 const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
+const GOOGLE_CLIENT_ID = '249176329339-7ci3o23tf1r0of2ohu58matoe3d2b85s.apps.googleusercontent.com';
 
 /**
- * Get Google OAuth2 Access Token with robust fallback
+ * Get Google OAuth2 Access Token with real Google Client ID
  */
 async function getGoogleDriveAuthToken(interactive = true) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken) {
       chrome.identity.getAuthToken({ interactive }, (token) => {
         if (!chrome.runtime.lastError && token) {
           return resolve(token);
         }
-        openGoogleAuthFallback(resolve);
+        openGoogleAuthFallback(resolve, reject);
       });
     } else {
-      openGoogleAuthFallback(resolve);
+      openGoogleAuthFallback(resolve, reject);
     }
   });
 }
 
-function openGoogleAuthFallback(resolve) {
+function openGoogleAuthFallback(resolve, reject) {
   try {
     const redirectUrl = chrome.identity ? chrome.identity.getRedirectURL() : 'https://video-sharing-app-jordan.vercel.app/';
-    const clientId = '1056763456789-sample.apps.googleusercontent.com';
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`;
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`;
     
     if (chrome.identity && chrome.identity.launchWebAuthFlow) {
       chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (responseUrl) => {
@@ -33,20 +33,14 @@ function openGoogleAuthFallback(resolve) {
           const token = responseUrl.match(/access_token=([^&]+)/)?.[1];
           if (token) return resolve(token);
         }
-        chrome.tabs.create({ url: 'https://accounts.google.com/' });
-        resolve('google_tab_opened');
+        reject(new Error('Google authentication canceled'));
       });
     } else {
-      chrome.tabs.create({ url: 'https://accounts.google.com/' });
-      resolve('google_tab_opened');
+      window.open(authUrl, '_blank');
+      resolve('google_popup_opened');
     }
   } catch (e) {
-    if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: 'https://accounts.google.com/' });
-    } else {
-      window.open('https://accounts.google.com/', '_blank');
-    }
-    resolve('google_tab_opened');
+    reject(e);
   }
 }
 
