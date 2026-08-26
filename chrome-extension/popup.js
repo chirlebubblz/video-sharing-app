@@ -1,50 +1,83 @@
-document.getElementById('btn-start').addEventListener('click', async () => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab || !tab.id) return;
+document.addEventListener('DOMContentLoaded', () => {
+  const btnStart = document.getElementById('btn-start');
+  const btnOpenControl = document.getElementById('btn-open-control');
+  const btnViewLatest = document.getElementById('btn-view-latest');
+  const btnPerm = document.getElementById('btn-perm');
+  const btnDriveConnect = document.getElementById('btn-drive-connect');
 
-  if (
-    tab.url.startsWith('chrome://') ||
-    tab.url.startsWith('edge://') ||
-    tab.url.startsWith('https://chromewebstore.google.com')
-  ) {
-    alert(
-      'Chrome security prevents extensions from running directly on internal chrome:// pages. Please switch to any webpage (e.g. google.com, github.com, wikipedia.org) and try again!'
-    );
-    return;
+  // 1. Connect Google Drive Account Button
+  if (btnDriveConnect) {
+    btnDriveConnect.addEventListener('click', async () => {
+      btnDriveConnect.innerText = '⏳ Opening Google Login...';
+      try {
+        if (typeof getGoogleDriveAuthToken === 'function') {
+          const token = await getGoogleDriveAuthToken(true);
+          if (token) {
+            btnDriveConnect.style.background = 'rgba(34,197,94,0.2)';
+            btnDriveConnect.style.borderColor = '#22c55e';
+            btnDriveConnect.style.color = '#4ade80';
+            btnDriveConnect.innerText = '✅ Google Drive Connected!';
+          }
+        } else {
+          chrome.identity.getAuthToken({ interactive: true }, (token) => {
+            if (token) {
+              btnDriveConnect.style.background = 'rgba(34,197,94,0.2)';
+              btnDriveConnect.style.borderColor = '#22c55e';
+              btnDriveConnect.style.color = '#4ade80';
+              btnDriveConnect.innerText = '✅ Google Drive Connected!';
+            } else {
+              btnDriveConnect.innerText = '📁 Connect Google Drive Account';
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Drive connection error:', err);
+        btnDriveConnect.innerText = '📁 Connect Google Drive Account';
+      }
+    });
   }
 
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content.js'],
+  // 2. Start Recording
+  if (btnStart) {
+    btnStart.addEventListener('click', async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab) {
+        chrome.tabs.sendMessage(tab.id, { action: 'start_recording' }, (res) => {
+          if (chrome.runtime.lastError) {
+            chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ['driveStorage.js', 'content.js'],
+            }, () => {
+              chrome.tabs.sendMessage(tab.id, { action: 'start_recording' });
+            });
+          }
+        });
+        window.close();
+      }
     });
-  } catch (e) {}
+  }
 
-  chrome.tabs.sendMessage(tab.id, { action: 'start_recording' }, () => {
-    if (chrome.runtime.lastError) {}
-    window.close();
-  });
-});
+  if (btnOpenControl) {
+    btnOpenControl.addEventListener('click', () => {
+      chrome.tabs.create({ url: 'https://video-sharing-app-jordan.vercel.app/' });
+    });
+  }
 
-// Open Main Control Screen / Video Library
-document.getElementById('btn-open-control').addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://video-sharing-app-jordan.vercel.app' });
-  window.close();
-});
+  if (btnViewLatest) {
+    btnViewLatest.addEventListener('click', () => {
+      chrome.storage.local.get(['latest_video_id'], (result) => {
+        if (result.latest_video_id) {
+          chrome.tabs.create({ url: `https://video-sharing-app-jordan.vercel.app/v/${result.latest_video_id}` });
+        } else {
+          alert('No recordings found yet!');
+        }
+      });
+    });
+  }
 
-// View Latest Recording Page
-document.getElementById('btn-view-latest').addEventListener('click', () => {
-  chrome.storage.local.get(['latest_video_id'], (result) => {
-    if (result && result.latest_video_id) {
-      chrome.tabs.create({ url: `https://video-sharing-app-jordan.vercel.app/v/${result.latest_video_id}` });
-    } else {
-      chrome.tabs.create({ url: 'https://video-sharing-app-jordan.vercel.app' });
-    }
-    window.close();
-  });
-});
-
-document.getElementById('btn-perm').addEventListener('click', () => {
-  chrome.runtime.sendMessage({ action: 'open_permission_page' });
-  window.close();
+  if (btnPerm) {
+    btnPerm.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('permission.html') });
+    });
+  }
 });

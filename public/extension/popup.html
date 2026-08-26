@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <style>
     body {
-      width: 270px;
+      width: 280px;
       padding: 16px;
       margin: 0;
       font-family: system-ui, -apple-system, sans-serif;
@@ -72,11 +72,12 @@
 </head>
 <body>
   <div class="header">
-    <img src="icon.svg" alt="Viking Icon">
+    <img src="icon.svg" alt="Smiley Icon">
     <h2>Not Another Video Sharing App</h2>
   </div>
-  <p>Record your screen with floating camera bubble & pen toolbar over any website.</p>
+  <p>Record your screen and save recordings directly to your Google Drive.</p>
   
+  <button id="btn-drive-connect" class="btn-sub" style="border-color:#facc15;color:#facc15;font-weight:700;margin-bottom:10px;background:#18181b;">📁 Connect Google Drive Account</button>
   <button id="btn-start" class="btn-main">🎥 Record Your Screen</button>
 
   <div style="border-top: 1px solid #27272a; margin: 12px 0 6px 0; padding-top: 10px;">
@@ -85,6 +86,7 @@
     <button id="btn-perm" class="btn-sub">⚙️ Grant Cam & Mic Permission</button>
   </div>
 
+  <script src="driveStorage.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
