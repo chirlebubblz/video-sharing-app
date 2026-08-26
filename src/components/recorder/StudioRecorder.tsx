@@ -272,10 +272,10 @@ export function StudioRecorder() {
             <div className="bg-black/80 p-5 rounded-2xl border border-zinc-800 space-y-2">
               <div className="font-extrabold text-yellow-400 flex items-center gap-2 text-sm">
                 <span className="w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center font-black text-xs">2</span>
-                Pick what to share
+                Connect Google Drive
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                Click the <strong>😉 icon</strong> in your browser toolbar on any tab (Gmail, Docs, GitHub). Record your full screen, a window, or a single tab.
+                Click the <strong>😉 icon</strong> in your browser toolbar, then click <strong className="text-yellow-400">📁 Connect Google Drive Account</strong> to sign in with Google.
               </p>
             </div>
 
@@ -283,10 +283,10 @@ export function StudioRecorder() {
             <div className="bg-black/80 p-5 rounded-2xl border border-zinc-800 space-y-2">
               <div className="font-extrabold text-yellow-400 flex items-center gap-2 text-sm">
                 <span className="w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center font-black text-xs">3</span>
-                Share & relax
+                Record & Share
               </div>
               <p className="text-zinc-300 leading-relaxed">
-                When you're done, hit the green checkmark! We'll auto-generate a shareable link, transcript, and AI summary instantly.
+                Click <strong>Record Your Screen</strong>. When done, hit the green checkmark (<strong className="text-emerald-400">✓</strong>). Your video saves to Google Drive with an instant share link!
               </p>
             </div>
           </div>
