@@ -1,5 +1,5 @@
 // Not Another Video Sharing App - Google Drive Storage Engine
-// Uses Google Drive API v3 to save screen recordings into user's own Google Drive
+// Uses Google Drive API v3 to save screen recordings directly into user's own Google Drive
 
 const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
 
@@ -21,7 +21,7 @@ async function getGoogleDriveAuthToken(interactive = true) {
 }
 
 /**
- * Get or create the dedicated folder 'Not Anothe Video Sharing App' in user's Google Drive
+ * Get or create the dedicated folder 'Not Another Video Sharing App' in user's Google Drive
  */
 async function getOrCreateGoogleDriveFolder(token) {
   // 1. Search for existing folder
@@ -52,7 +52,7 @@ async function getOrCreateGoogleDriveFolder(token) {
 }
 
 /**
- * Upload video blob to user's Google Drive folder
+ * Upload video blob to user's Google Drive folder & configure readily shareable permissions
  */
 async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()}.webm`) {
   try {
@@ -91,7 +91,7 @@ async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()
     const fileData = await uploadRes.json();
     const fileId = fileData.id;
 
-    // 3. Make file public (anyone with link can view)
+    // 3. Make file public (anyone with link can view & download!)
     await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
       method: 'POST',
       headers: {
@@ -101,13 +101,17 @@ async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()
       body: JSON.stringify({
         role: 'reader',
         type: 'anyone',
+        allowFileDiscovery: false,
       }),
     });
 
     const driveViewUrl = `https://drive.google.com/file/d/${fileId}/view`;
+    const driveDownloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+
     return {
       fileId,
       driveViewUrl,
+      driveDownloadUrl,
       fileName: filename,
     };
   } catch (err) {
