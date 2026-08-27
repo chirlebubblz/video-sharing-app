@@ -17,6 +17,30 @@
   let rightDockEl = null;
   let cameraBubbleEl = null;
 
+  function showToastNotification(text) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      background: #facc15;
+      color: #000000;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    `;
+    toast.innerHTML = `<span>✨</span> <span>${text}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+
   // 1. Render Pre-Recording Launcher Card with Full Screen & Camera Only options
   function showLauncherCard() {
     if (document.getElementById('dnl-loom-launcher')) return;
@@ -256,7 +280,7 @@
     }
   }
 
-  // Upload recording to Google Drive & auto-fallback to instant local download
+  // Upload recording to Google Drive & auto-copy link to clipboard instantly
   async function stopRecordingAndUpload() {
     if (!isRecording) return;
     isRecording = false;
@@ -289,6 +313,10 @@
         }
 
         if (driveResult && driveResult.driveViewUrl) {
+          try {
+            await navigator.clipboard.writeText(driveResult.driveViewUrl);
+            showToastNotification('Google Drive Share Link Copied to Clipboard!');
+          } catch (cErr) {}
           window.open(driveResult.driveViewUrl, '_blank');
         } else {
           // If Drive upload wasn't connected yet, prompt login
@@ -297,6 +325,10 @@
             if (token) {
               driveResult = await uploadVideoToGoogleDrive(blob, filename);
               if (driveResult && driveResult.driveViewUrl) {
+                try {
+                  await navigator.clipboard.writeText(driveResult.driveViewUrl);
+                  showToastNotification('Google Drive Share Link Copied to Clipboard!');
+                } catch (cErr) {}
                 window.open(driveResult.driveViewUrl, '_blank');
                 return;
               }
@@ -311,7 +343,7 @@
           document.body.appendChild(a);
           a.click();
           a.remove();
-          alert('Recording completed and saved to your Downloads!');
+          showToastNotification('Recording saved to your Downloads!');
         }
       } catch (err) {
         console.error('Upload error:', err);
