@@ -8,18 +8,16 @@
   let recordedChunks = [];
   let isRecording = false;
   let isPaused = false;
-  let startTime = 0;
   let elapsedSeconds = 0;
   let timerInterval = null;
   let cameraStream = null;
+  let selectedMode = 'full'; // 'full' or 'cam'
 
   let launcherCardEl = null;
   let rightDockEl = null;
   let cameraBubbleEl = null;
-  let canvasEl = null;
-  let ctx = null;
 
-  // 1. Render Pre-Recording Launcher Card with Google Drive Connect Button
+  // 1. Render Pre-Recording Launcher Card with Full Screen & Camera Only options
   function showLauncherCard() {
     if (document.getElementById('dnl-loom-launcher')) return;
 
@@ -60,7 +58,11 @@
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
         <button id="dnl-opt-full" style="background:#27272a;border:1px solid #facc15;color:white;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
           <span>🖥️ Full Screen + Camera</span>
-          <span style="color:#facc15;font-weight:bold;">✓</span>
+          <span id="dnl-chk-full" style="color:#facc15;font-weight:bold;">✓</span>
+        </button>
+        <button id="dnl-opt-cam" style="background:#18181b;border:1px solid rgba(255,255,255,0.08);color:#a1a1aa;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+          <span>📷 Camera Only</span>
+          <span id="dnl-chk-cam" style="color:#facc15;font-weight:bold;display:none;">✓</span>
         </button>
       </div>
 
@@ -70,7 +72,7 @@
       </div>
 
       <button id="dnl-btn-start-record" style="width:100%;background:#facc15;border:none;color:#000000;padding:14px;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(250,204,21,0.25);transition:transform 0.1s;">
-        Record Your Screen
+        Start Recording
       </button>
     `;
 
@@ -78,6 +80,35 @@
 
     document.getElementById('dnl-close-launcher').addEventListener('click', () => launcherCardEl.remove());
     
+    const optFull = document.getElementById('dnl-opt-full');
+    const optCam = document.getElementById('dnl-opt-cam');
+    const chkFull = document.getElementById('dnl-chk-full');
+    const chkCam = document.getElementById('dnl-chk-cam');
+
+    optFull.addEventListener('click', () => {
+      selectedMode = 'full';
+      optFull.style.borderColor = '#facc15';
+      optFull.style.color = 'white';
+      optFull.style.background = '#27272a';
+      optCam.style.borderColor = 'rgba(255,255,255,0.08)';
+      optCam.style.color = '#a1a1aa';
+      optCam.style.background = '#18181b';
+      chkFull.style.display = 'inline';
+      chkCam.style.display = 'none';
+    });
+
+    optCam.addEventListener('click', () => {
+      selectedMode = 'cam';
+      optCam.style.borderColor = '#facc15';
+      optCam.style.color = 'white';
+      optCam.style.background = '#27272a';
+      optFull.style.borderColor = 'rgba(255,255,255,0.08)';
+      optFull.style.color = '#a1a1aa';
+      optFull.style.background = '#18181b';
+      chkCam.style.display = 'inline';
+      chkFull.style.display = 'none';
+    });
+
     const btnConnect = document.getElementById('dnl-btn-connect-drive');
     if (btnConnect) {
       btnConnect.addEventListener('click', async () => {
@@ -162,74 +193,65 @@
     clearInterval(timerInterval);
     if (rightDockEl) rightDockEl.remove();
     if (cameraBubbleEl) cameraBubbleEl.remove();
+    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
     if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
   }
 
   async function startRecording() {
     try {
-      showRightVerticalDock();
       recordedChunks = [];
       elapsedSeconds = 0;
       isPaused = false;
 
-      chrome.runtime.sendMessage({ action: 'request_desktop_stream' }, async (response) => {
-        if (!response || !response.streamId) {
-          try {
-            mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-          } catch (e) {
-            cleanupRecordingUI();
-            return;
-          }
-        } else {
-          try {
-            mediaStream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
-              video: {
-                mandatory: {
-                  chromeMediaSource: 'desktop',
-                  chromeMediaSourceId: response.streamId,
-                },
-              },
-            });
-          } catch (e) {
-            mediaStream = await navigator.mediaDevices.getUserMedia({
-              audio: false,
-              video: {
-                mandatory: {
-                  chromeMediaSource: 'desktop',
-                  chromeMediaSourceId: response.streamId,
-                },
-              },
-            });
-          }
+      if (selectedMode === 'cam') {
+        // 🎥 Camera Only Mode
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (e) {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         }
+      } else {
+        // 🖥️ Full Screen + Camera Mode
+        try {
+          mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        } catch (e) {
+          console.warn('Screen capture canceled or error:', e);
+          cleanupRecordingUI();
+          return;
+        }
+      }
 
-        mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            recordedChunks.push(e.data);
-          }
-        };
+      showRightVerticalDock();
 
-        mediaRecorder.start(1000);
-        isRecording = true;
-        startTime = Date.now();
+      let options = { mimeType: 'video/webm' };
+      if (!MediaRecorder.isTypeSupported('video/webm')) {
+        options = { mimeType: 'video/mp4' };
+      }
 
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-          if (!isPaused) {
-            elapsedSeconds++;
-            const mins = Math.floor(elapsedSeconds / 60);
-            const secs = String(elapsedSeconds % 60).padStart(2, '0');
-            const timerEl = document.getElementById('dnl-timer');
-            if (timerEl) timerEl.innerText = `${mins}:${secs}`;
-          }
-        }, 1000);
+      mediaRecorder = new MediaRecorder(mediaStream, options);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          recordedChunks.push(e.data);
+        }
+      };
 
-        mediaStream.getVideoTracks()[0].onended = () => {
-          stopRecordingAndUpload();
-        };
-      });
+      mediaRecorder.start(1000);
+      isRecording = true;
+
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!isPaused) {
+          elapsedSeconds++;
+          const mins = Math.floor(elapsedSeconds / 60);
+          const secs = String(elapsedSeconds % 60).padStart(2, '0');
+          const timerEl = document.getElementById('dnl-timer');
+          if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+        }
+      }, 1000);
+
+      mediaStream.getVideoTracks()[0].onended = () => {
+        stopRecordingAndUpload();
+      };
     } catch (err) {
       console.error('Error starting recording:', err);
       cleanupRecordingUI();
@@ -251,7 +273,7 @@
     }
 
     mediaRecorder.onstop = async () => {
-      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/webm' });
       if (blob.size === 0) {
         cleanupRecordingUI();
         return;
@@ -270,7 +292,7 @@
 
         const videoObj = {
           id: videoId,
-          title: `Screen Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+          title: `${selectedMode === 'cam' ? 'Camera' : 'Screen'} Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
           duration: `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`,
           views: 1,
           createdAt: 'Just now',
@@ -279,19 +301,11 @@
           driveDownloadUrl: driveResult ? driveResult.driveDownloadUrl : null,
         };
 
-        // Save to storage
         chrome.storage.local.get(['my_videos'], (result) => {
           const existing = result.my_videos || [];
           const updated = [videoObj, ...existing];
           chrome.storage.local.set({ my_videos: updated, latest_video_id: videoId });
         });
-
-        // Broadcast to web app
-        try {
-          chrome.runtime.sendMessage({ action: 'NEW_VIDEO', video: videoObj });
-          const syncChan = new BroadcastChannel('dnl_video_sync');
-          syncChan.postMessage({ type: 'NEW_VIDEO', video: videoObj });
-        } catch (e) {}
 
         if (driveResult && driveResult.driveViewUrl) {
           window.open(driveResult.driveViewUrl, '_blank');
