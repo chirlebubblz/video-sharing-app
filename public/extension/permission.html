@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Not Another Video Sharing App - Grant Camera & Mic Permissions</title>
+  <title>Not Another Video Sharing App - Initial Setup & Google Drive Login</title>
   <style>
     body {
       background: #09090b;
@@ -12,42 +12,126 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
-      text-align: center;
+      padding: 20px;
     }
     .card {
       background: #18181b;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 40px;
+      padding: 36px;
       border-radius: 24px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-      max-width: 420px;
+      max-width: 440px;
+      width: 100%;
+      box-sizing: border-box;
     }
-    h1 { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
-    p { font-size: 14px; color: #a1a1aa; line-height: 1.6; margin-bottom: 24px; }
-    button {
-      background: linear-gradient(135deg, #f97316, #ef4444);
+    .header-logo {
+      width: 48px;
+      height: 48px;
+      background: #facc15;
+      color: #000;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 900;
+      margin: 0 auto 16px auto;
+    }
+    h1 { font-size: 22px; font-weight: 900; color: #facc15; margin: 0 0 8px 0; }
+    p { font-size: 13px; color: #a1a1aa; line-height: 1.5; margin: 0 0 24px 0; }
+    .step-box {
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      text-align: left;
+    }
+    .step-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #facc15;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .step-desc {
+      font-size: 12px;
+      color: #71717a;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+    .btn-step {
+      width: 100%;
+      padding: 11px;
+      background: #27272a;
       color: white;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-step:hover {
+      background: #3f3f46;
+      border-color: #facc15;
+      color: #facc15;
+    }
+    .btn-done {
+      width: 100%;
+      padding: 14px;
+      background: #facc15;
+      color: #000000;
       border: none;
-      padding: 14px 28px;
       border-radius: 14px;
       font-size: 15px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+      margin-top: 10px;
+      box-shadow: 0 10px 20px rgba(250,204,21,0.25);
     }
-    .success { color: #22c55e; font-weight: 700; display: none; margin-top: 16px; font-size: 14px; }
+    .status-badge {
+      font-size: 12px;
+      font-weight: 700;
+      color: #4ade80;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <div style="font-size: 40px; margin-bottom: 12px;">📹</div>
-    <h1>Enable Loom Camera & Mic</h1>
-    <p>Grant permission once so your floating camera bubble & recorder work seamlessly across Gmail, Google Docs, GitHub, and every website!</p>
-    <button id="btn-grant">Grant Camera & Microphone Access</button>
-    <div id="status-success" class="success">✓ Permissions Granted! You can close this tab now.</div>
+    <div class="header-logo">😉</div>
+    <h1>Welcome & Quick Setup</h1>
+    <p>Complete these 2 quick steps once to activate video recording and save directly to your Google Drive.</p>
+
+    <!-- Step 1: Camera & Mic -->
+    <div class="step-box">
+      <div class="step-title">
+        <span>1. Camera & Microphone</span>
+        <span id="badge-media" class="status-badge">✓ Active</span>
+      </div>
+      <div class="step-desc">Enable camera & mic for your floating camera bubble and speech transcripts.</div>
+      <button id="btn-grant-media" class="btn-step">📷 Allow Camera & Mic Access</button>
+    </div>
+
+    <!-- Step 2: Google Drive Login -->
+    <div class="step-box">
+      <div class="step-title">
+        <span>2. Google Drive Storage</span>
+        <span id="badge-drive" class="status-badge">✓ Connected</span>
+      </div>
+      <div class="step-desc">Sign in with Google so recordings save directly to your Google Drive.</div>
+      <button id="btn-grant-drive" class="btn-step" style="border-color:#facc15;color:#facc15;">📁 Sign In with Google Drive</button>
+    </div>
+
+    <button id="btn-finish-setup" class="btn-done" style="display:none;">🚀 All Set! Start Recording</button>
   </div>
+
+  <script src="driveStorage.js"></script>
   <script src="permission.js"></script>
 </body>
 </html>
