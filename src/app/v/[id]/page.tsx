@@ -199,7 +199,7 @@ export default function VideoPage({ params }: { params: { id: string } }) {
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">{aiData.title}</h1>
             <p className="text-xs text-zinc-400 mt-1 font-medium">
-              Recorded with DefinitelyNotLoom Studio • 60fps HD • {aiData.viewsCount || 1} {aiData.viewsCount === 1 ? 'View' : 'Views'}
+              Recorded with Not Another Video Sharing App • 60fps HD • {aiData.viewsCount || 1} {aiData.viewsCount === 1 ? 'View' : 'Views'}
             </p>
           </div>
         </div>

@@ -204,14 +204,12 @@
       isPaused = false;
 
       if (selectedMode === 'cam') {
-        // 🎥 Camera Only Mode
         try {
           mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         } catch (e) {
           mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         }
       } else {
-        // 🖥️ Full Screen + Camera Mode
         try {
           mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
         } catch (e) {
@@ -258,7 +256,7 @@
     }
   }
 
-  // Upload recording to Google Drive & configure public share link
+  // Upload recording to Google Drive & auto-fallback to instant local download
   async function stopRecordingAndUpload() {
     if (!isRecording) return;
     isRecording = false;
@@ -290,27 +288,30 @@
           console.warn('Google Drive upload notice:', gErr);
         }
 
-        const videoObj = {
-          id: videoId,
-          title: `${selectedMode === 'cam' ? 'Camera' : 'Screen'} Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
-          duration: `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`,
-          views: 1,
-          createdAt: 'Just now',
-          thumbnail: 'bg-gradient-to-tr from-yellow-950 via-zinc-900 to-black',
-          driveViewUrl: driveResult ? driveResult.driveViewUrl : null,
-          driveDownloadUrl: driveResult ? driveResult.driveDownloadUrl : null,
-        };
-
-        chrome.storage.local.get(['my_videos'], (result) => {
-          const existing = result.my_videos || [];
-          const updated = [videoObj, ...existing];
-          chrome.storage.local.set({ my_videos: updated, latest_video_id: videoId });
-        });
-
         if (driveResult && driveResult.driveViewUrl) {
           window.open(driveResult.driveViewUrl, '_blank');
         } else {
-          window.open(`https://video-sharing-app-jordan.vercel.app/v/${videoId}`, '_blank');
+          // If Drive upload wasn't connected yet, prompt login
+          try {
+            const token = await getGoogleDriveAuthToken(true);
+            if (token) {
+              driveResult = await uploadVideoToGoogleDrive(blob, filename);
+              if (driveResult && driveResult.driveViewUrl) {
+                window.open(driveResult.driveViewUrl, '_blank');
+                return;
+              }
+            }
+          } catch (e) {}
+
+          // Zero-Loss Fallback: Download file directly to computer!
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          alert('Recording completed and saved to your Downloads!');
         }
       } catch (err) {
         console.error('Upload error:', err);
