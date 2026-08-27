@@ -2,9 +2,10 @@
 // Uses Google Drive API v3 to save screen recordings directly into user's own Google Drive
 
 const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
+const GOOGLE_CLIENT_ID = '249176329339-7ci3o23tf1r0of2ohu58matoe3d2b85s.apps.googleusercontent.com';
 
 /**
- * Get Google OAuth2 Access Token using native Chrome Extension OAuth2 identity API
+ * Get Google OAuth2 Access Token with automatic Web OAuth fallback
  */
 async function getGoogleDriveAuthToken(interactive = true) {
   return new Promise((resolve, reject) => {
@@ -13,14 +14,48 @@ async function getGoogleDriveAuthToken(interactive = true) {
         if (token && !chrome.runtime.lastError) {
           return resolve(token);
         }
-        const err = chrome.runtime.lastError ? chrome.runtime.lastError.message : 'Google Auth failed';
-        console.warn('Native Chrome AuthToken Notice:', err);
-        reject(new Error(err));
+        launchGoogleWebOAuth(resolve, reject, interactive);
       });
     } else {
-      reject(new Error('chrome.identity API is not available'));
+      launchGoogleWebOAuth(resolve, reject, interactive);
     }
   });
+}
+
+function launchGoogleWebOAuth(resolve, reject, interactive) {
+  try {
+    const redirectUrl = chrome.identity && chrome.identity.getRedirectURL ? chrome.identity.getRedirectURL() : 'https://video-sharing-app-jordan.vercel.app/';
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`;
+
+    if (chrome.identity && chrome.identity.launchWebAuthFlow) {
+      chrome.identity.launchWebAuthFlow({ url: authUrl, interactive }, (responseUrl) => {
+        if (responseUrl) {
+          const token = responseUrl.match(/access_token=([^&]+)/)?.[1];
+          if (token) return resolve(token);
+        }
+        if (interactive) {
+          window.open(authUrl, '_blank');
+          resolve('web_tab_opened');
+        } else {
+          reject(new Error('Google Auth canceled'));
+        }
+      });
+    } else {
+      if (interactive) {
+        window.open(authUrl, '_blank');
+        resolve('web_tab_opened');
+      } else {
+        reject(new Error('chrome.identity API unavailable'));
+      }
+    }
+  } catch (err) {
+    if (interactive) {
+      window.open(`https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&redirect_uri=https://video-sharing-app-jordan.vercel.app/&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`, '_blank');
+      resolve('web_tab_opened');
+    } else {
+      reject(err);
+    }
+  }
 }
 
 /**
@@ -58,6 +93,9 @@ async function getOrCreateGoogleDriveFolder(token) {
 async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()}.webm`) {
   try {
     const token = await getGoogleDriveAuthToken(true);
+    if (!token || token === 'web_tab_opened') {
+      throw new Error('Google Drive authorization pending in browser tab');
+    }
     const folderId = await getOrCreateGoogleDriveFolder(token);
 
     const metadata = {
