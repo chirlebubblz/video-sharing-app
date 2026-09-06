@@ -1,5 +1,5 @@
 {
-  "name": "definitely-not-loom",
+  "name": "not-another-video-sharing-app",
   "version": "0.1.0",
   "private": true,
   "main": "electron/main.js",
@@ -13,8 +13,8 @@
     "electron:dist": "electron-builder --win nsis portable"
   },
   "build": {
-    "appId": "com.definitelynotloom.app",
-    "productName": "DefinitelyNotLoom Studio",
+    "appId": "com.notanothervideosharingapp.app",
+    "productName": "Not Another Video Sharing App",
     "directories": {
       "output": "dist"
     },

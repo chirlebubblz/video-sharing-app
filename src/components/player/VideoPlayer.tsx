@@ -134,6 +134,23 @@ export function VideoPlayer({
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const isDriveUrl = src.includes('drive.google.com') || src.includes('googleusercontent.com');
+
+  if (isDriveUrl) {
+    const embedSrc = src.includes('/view') ? src.replace('/view', '/preview') : src;
+    return (
+      <div className="relative aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border border-zinc-800">
+        <iframe
+          src={embedSrc}
+          className="w-full h-full border-none"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen
+          title="Google Drive Video Player"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}

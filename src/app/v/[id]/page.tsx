@@ -67,6 +67,53 @@ export default function VideoPage({ params }: { params: { id: string } }) {
     const isFirstView = typeof window !== 'undefined' && !sessionStorage.getItem(hasViewedKey);
     const incrementParam = isFirstView ? '?increment=true' : '';
 
+    // 1. Check URL query parameters for direct Google Drive stream link (Cap-style low cost)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const driveId = params.get('driveId');
+      const driveUrl = params.get('driveUrl');
+      const customTitle = params.get('title');
+
+      if (driveId || driveUrl) {
+        const streamUrl = driveUrl || `https://drive.google.com/file/d/${driveId}/preview`;
+        setAiData({
+          id: videoId,
+          title: customTitle || 'Google Drive Video Recording',
+          summary: '• Saved directly to Google Drive (Zero SaaS storage costs).\n• Streamed on demand.',
+          actionItems: ['Watch video recording', 'Share Google Drive link'],
+          chapters: [{ time: 0, title: 'Screen Recording' }],
+          videoUrl: streamUrl,
+          transcripts: [],
+        });
+        return;
+      }
+
+      // 2. Check localStorage navsa_drive_videos
+      try {
+        const saved = localStorage.getItem('navsa_drive_videos');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            const found = parsed.find((v: any) => v.id === videoId);
+            if (found && (found.driveViewUrl || found.fileId)) {
+              const streamUrl = found.driveViewUrl || `https://drive.google.com/file/d/${found.fileId}/preview`;
+              setAiData({
+                id: videoId,
+                title: found.title || 'Google Drive Video Recording',
+                summary: '• Saved directly to Google Drive (Zero SaaS storage costs).\n• Streamed on demand.',
+                actionItems: ['Watch video recording', 'Share Google Drive link'],
+                chapters: [{ time: 0, title: 'Screen Recording' }],
+                videoUrl: streamUrl,
+                transcripts: [],
+              });
+              return;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 3. Fallback to API endpoint
     fetch(`/api/video/${videoId}${incrementParam}`)
       .then((res) => res.json())
       .then((data) => {

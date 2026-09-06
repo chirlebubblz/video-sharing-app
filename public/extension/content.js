@@ -312,12 +312,31 @@
           console.warn('Google Drive upload notice:', gErr);
         }
 
-        if (driveResult && driveResult.driveViewUrl) {
+        if (driveResult && (driveResult.driveViewUrl || driveResult.fileId)) {
+          const watchUrl = `https://video-sharing-app-jordan.vercel.app/v/${videoId}?driveId=${driveResult.fileId}&driveUrl=${encodeURIComponent(driveResult.driveViewUrl)}`;
+          
+          const videoObj = {
+            id: videoId,
+            title: `${selectedMode === 'cam' ? 'Camera' : 'Screen'} Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+            duration: `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`,
+            views: 1,
+            createdAt: 'Just now',
+            fileId: driveResult.fileId,
+            driveViewUrl: driveResult.driveViewUrl,
+          };
+
+          chrome.storage.local.get(['navsa_drive_videos'], (result) => {
+            const existing = result.navsa_drive_videos || [];
+            const updated = [videoObj, ...existing];
+            chrome.storage.local.set({ navsa_drive_videos: updated, latest_video_id: videoId });
+          });
+
           try {
-            await navigator.clipboard.writeText(driveResult.driveViewUrl);
+            await navigator.clipboard.writeText(watchUrl);
             showToastNotification('Google Drive Share Link Copied to Clipboard!');
           } catch (cErr) {}
-          window.open(driveResult.driveViewUrl, '_blank');
+
+          window.open(watchUrl, '_blank');
         } else {
           // If Drive upload wasn't connected yet, prompt login
           try {
