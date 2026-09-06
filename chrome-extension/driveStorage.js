@@ -5,57 +5,38 @@ const DRIVE_FOLDER_NAME = 'Not Another Video Sharing App';
 const GOOGLE_CLIENT_ID = '249176329339-7ci3o23tf1r0of2ohu58matoe3d2b85s.apps.googleusercontent.com';
 
 /**
- * Get Google OAuth2 Access Token with automatic Web OAuth fallback
+ * Get Google OAuth2 Access Token using native Chrome identity API with stale token clearing
  */
 async function getGoogleDriveAuthToken(interactive = true) {
   return new Promise((resolve, reject) => {
-    if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken) {
-      chrome.identity.getAuthToken({ interactive }, (token) => {
-        if (token && !chrome.runtime.lastError) {
-          return resolve(token);
-        }
-        launchGoogleWebOAuth(resolve, reject, interactive);
-      });
-    } else {
-      launchGoogleWebOAuth(resolve, reject, interactive);
+    if (typeof chrome === 'undefined' || !chrome.identity || !chrome.identity.getAuthToken) {
+      return reject(new Error('chrome.identity API is not available in this context'));
     }
-  });
-}
 
-function launchGoogleWebOAuth(resolve, reject, interactive) {
-  try {
-    const redirectUrl = chrome.identity && chrome.identity.getRedirectURL ? chrome.identity.getRedirectURL() : 'https://video-sharing-app-jordan.vercel.app/';
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`;
-
-    if (chrome.identity && chrome.identity.launchWebAuthFlow) {
-      chrome.identity.launchWebAuthFlow({ url: authUrl, interactive }, (responseUrl) => {
-        if (responseUrl) {
-          const token = responseUrl.match(/access_token=([^&]+)/)?.[1];
-          if (token) return resolve(token);
-        }
-        if (interactive) {
-          window.open(authUrl, '_blank');
-          resolve('web_tab_opened');
-        } else {
-          reject(new Error('Google Auth canceled'));
-        }
-      });
-    } else {
-      if (interactive) {
-        window.open(authUrl, '_blank');
-        resolve('web_tab_opened');
-      } else {
-        reject(new Error('chrome.identity API unavailable'));
+    chrome.identity.getAuthToken({ interactive }, (token) => {
+      if (token && !chrome.runtime.lastError) {
+        return resolve(token);
       }
-    }
-  } catch (err) {
-    if (interactive) {
-      window.open(`https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&redirect_uri=https://video-sharing-app-jordan.vercel.app/&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file`, '_blank');
-      resolve('web_tab_opened');
-    } else {
-      reject(err);
-    }
-  }
+
+      // If token error or stale token, clear token cache and retry interactively
+      chrome.identity.getAuthToken({ interactive: false }, (oldToken) => {
+        if (oldToken) {
+          chrome.identity.removeCachedAuthToken({ token: oldToken }, () => {
+            chrome.identity.getAuthToken({ interactive: true }, (newToken) => {
+              if (newToken && !chrome.runtime.lastError) {
+                return resolve(newToken);
+              }
+              const err = chrome.runtime.lastError ? chrome.runtime.lastError.message : 'Google sign-in canceled';
+              reject(new Error(err));
+            });
+          });
+        } else {
+          const err = chrome.runtime.lastError ? chrome.runtime.lastError.message : 'Google sign-in canceled';
+          reject(new Error(err));
+        }
+      });
+    });
+  });
 }
 
 /**
@@ -93,8 +74,8 @@ async function getOrCreateGoogleDriveFolder(token) {
 async function uploadVideoToGoogleDrive(blob, filename = `recording-${Date.now()}.webm`) {
   try {
     const token = await getGoogleDriveAuthToken(true);
-    if (!token || token === 'web_tab_opened') {
-      throw new Error('Google Drive authorization pending in browser tab');
+    if (!token) {
+      throw new Error('Google Drive authorization required');
     }
     const folderId = await getOrCreateGoogleDriveFolder(token);
 
