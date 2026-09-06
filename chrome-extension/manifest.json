@@ -3,6 +3,7 @@
   "name": "Not Another Video Sharing App",
   "version": "1.0",
   "description": "Record your screen and face easily, and save your videos to Google Drive.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyoJS8V2AL6GmjU9l7fFtwpRTgX7tZqVJs3eZEqdKFJvah0aup92Wt97xFs4s6Y+JUTxh1Gpyk+tgB2qf7qyrP5QYzrSqXeLXIMVOD0jIG/GLzgcXxPnuG+5aqxmFbIkCQavXADgwnlLZ40HwWJADJ10KeYceyHIAh9wWQVZK1s2OelMEk88N2Whmi1Nr6OzakEiYJANPOPbxwxqMlmoq+mNwb+fKzgNPS+lJDgx4fhP8BkstcVfWHk8pvLwWjwRpjkjaSpx10Fc4m7qHUkGN9w38LLpCzkj3q1KN+MTg5V7uTa9bVmuBop+fz0KSITFXMf6s+/mOEFiJaCRJQEow3wIDAQAB",
   "permissions": [
     "desktopCapture",
     "activeTab",
