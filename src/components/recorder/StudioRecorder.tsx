@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Puzzle,
   Radio,
+  UploadCloud,
 } from 'lucide-react';
 
 export function StudioRecorder() {
@@ -150,11 +151,12 @@ export function StudioRecorder() {
     }
   };
 
+  // 1. STEP 1: Save locally first immediately upon recording completion
   useEffect(() => {
-    if (recordedBlob && !uploadedVideoId && !isUploading) {
-      handleSimulatedUpload();
+    if (recordedBlob && previewUrl) {
+      handleDownload();
     }
-  }, [recordedBlob]);
+  }, [recordedBlob, previewUrl]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-4 space-y-6">
@@ -237,6 +239,47 @@ export function StudioRecorder() {
             </div>
           )}
         </div>
+
+        {/* Post-Recording Action Bar: Local file confirmed + Option to upload to Google Drive */}
+        {previewUrl && (
+          <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-900/90 border border-zinc-800 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                💾 Saved to Downloads
+              </span>
+              <span className="text-xs text-zinc-400">
+                File is safely saved to your computer.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDownload}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5 border border-zinc-700"
+                title="Download another copy"
+              >
+                <Download size={14} /> Download Again
+              </button>
+
+              {!uploadedVideoId ? (
+                <button
+                  onClick={handleSimulatedUpload}
+                  disabled={isUploading}
+                  className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black rounded-xl transition flex items-center gap-1.5 shadow-lg"
+                >
+                  <UploadCloud size={14} /> {isUploading ? 'Uploading to Drive...' : '📁 Upload to Google Drive'}
+                </button>
+              ) : (
+                <a
+                  href={`/v/${uploadedVideoId}`}
+                  className="px-4 py-2 bg-emerald-400 hover:bg-emerald-300 text-black text-xs font-black rounded-xl transition flex items-center gap-1.5 shadow-lg"
+                >
+                  <CheckCircle2 size={14} /> View Share Page
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Extension Installation & Usage Instructions */}

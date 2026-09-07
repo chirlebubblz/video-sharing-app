@@ -280,7 +280,7 @@
     }
   }
 
-  // Upload recording to Google Drive & auto-copy link to clipboard instantly
+  // Stop recording -> Save locally FIRST -> Provide option to upload to Google Drive
   async function stopRecordingAndUpload() {
     if (!isRecording) return;
     isRecording = false;
@@ -303,77 +303,225 @@
 
       const filename = `recording-${Date.now()}.webm`;
       const videoId = `vid-${Date.now()}`;
+      const durationStr = `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`;
 
+      // 1. STEP 1: IMMEDIATELY SAVE LOCALLY TO COMPUTER!
       try {
-        let driveResult = null;
-        try {
-          driveResult = await uploadVideoToGoogleDrive(blob, filename);
-        } catch (gErr) {
-          console.warn('Google Drive upload notice:', gErr);
-        }
-
-        if (driveResult && (driveResult.driveViewUrl || driveResult.fileId)) {
-          const watchUrl = `https://video-sharing-app-jordan.vercel.app/v/${videoId}?driveId=${driveResult.fileId}&driveUrl=${encodeURIComponent(driveResult.driveViewUrl)}`;
-          
-          const videoObj = {
-            id: videoId,
-            title: `${selectedMode === 'cam' ? 'Camera' : 'Screen'} Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
-            duration: `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`,
-            views: 1,
-            createdAt: 'Just now',
-            fileId: driveResult.fileId,
-            driveViewUrl: driveResult.driveViewUrl,
-          };
-
-          chrome.storage.local.get(['navsa_drive_videos'], (result) => {
-            const existing = result.navsa_drive_videos || [];
-            const updated = [videoObj, ...existing];
-            chrome.storage.local.set({ navsa_drive_videos: updated, latest_video_id: videoId });
-          });
-
-          try {
-            await navigator.clipboard.writeText(watchUrl);
-            showToastNotification('Google Drive Share Link Copied to Clipboard!');
-          } catch (cErr) {}
-
-          window.open(watchUrl, '_blank');
-        } else {
-          // If Drive upload wasn't connected yet, prompt login
-          try {
-            const token = await getGoogleDriveAuthToken(true);
-            if (token) {
-              driveResult = await uploadVideoToGoogleDrive(blob, filename);
-              if (driveResult && driveResult.driveViewUrl) {
-                try {
-                  await navigator.clipboard.writeText(driveResult.driveViewUrl);
-                  showToastNotification('Google Drive Share Link Copied to Clipboard!');
-                } catch (cErr) {}
-                window.open(driveResult.driveViewUrl, '_blank');
-                return;
-              }
-            }
-          } catch (e) {}
-
-          // Zero-Loss Fallback: Download file directly to computer!
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          showToastNotification('Recording saved to your Downloads!');
-        }
-      } catch (err) {
-        console.error('Upload error:', err);
-      } finally {
-        cleanupRecordingUI();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        showToastNotification('Recording saved to your Downloads!');
+      } catch (saveErr) {
+        console.warn('Local save error:', saveErr);
       }
+
+      // Save local record to storage
+      const videoObj = {
+        id: videoId,
+        title: `${selectedMode === 'cam' ? 'Camera' : 'Screen'} Recording (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+        duration: durationStr,
+        views: 1,
+        createdAt: 'Just now',
+        filename: filename,
+        isSavedLocally: true,
+      };
+
+      chrome.storage.local.get(['navsa_drive_videos'], (result) => {
+        const existing = result.navsa_drive_videos || [];
+        chrome.storage.local.set({
+          navsa_drive_videos: [videoObj, ...existing],
+          latest_video_id: videoId,
+        });
+      });
+
+      cleanupRecordingUI();
+
+      // 2. STEP 2: SHOW CLEAN MODAL WITH OPTION TO UPLOAD TO GOOGLE DRIVE
+      showPostRecordingModal(blob, filename, videoId, durationStr);
     };
 
     if (mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
+  }
+
+  // Modal presenting user the OPTION to upload to Google Drive after saving locally
+  function showPostRecordingModal(blob, filename, videoId, durationStr) {
+    const existing = document.getElementById('navsa-post-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'navsa-post-modal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #18181b;
+      border: 2px solid #facc15;
+      border-radius: 24px;
+      padding: 28px;
+      width: 440px;
+      max-width: 90vw;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, sans-serif;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.85);
+      z-index: 2147483647;
+      text-align: center;
+      animation: navsaModalIn 0.2s ease-out;
+    `;
+
+    modal.innerHTML = `
+      <style>
+        @keyframes navsaModalIn {
+          from { opacity: 0; transform: translate(-50%, -46%); }
+          to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        .navsa-btn-primary {
+          background: #facc15;
+          color: #000000;
+          border: none;
+          font-weight: 800;
+          font-size: 14px;
+          padding: 14px 20px;
+          border-radius: 14px;
+          cursor: pointer;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: transform 0.1s, background 0.15s;
+          margin-bottom: 10px;
+        }
+        .navsa-btn-primary:hover {
+          background: #eab308;
+          transform: scale(1.02);
+        }
+        .navsa-btn-secondary {
+          background: #27272a;
+          color: #d4d4d8;
+          border: 1px solid rgba(255,255,255,0.1);
+          font-weight: 600;
+          font-size: 13px;
+          padding: 12px 18px;
+          border-radius: 12px;
+          cursor: pointer;
+          width: 100%;
+          transition: background 0.15s;
+        }
+        .navsa-btn-secondary:hover {
+          background: #3f3f46;
+          color: #ffffff;
+        }
+      </style>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">😉</span>
+          <span style="font-weight:800;font-size:16px;color:#facc15;">Recording Saved!</span>
+        </div>
+        <button id="navsa-modal-close" style="background:transparent;border:none;color:#a1a1aa;font-size:18px;cursor:pointer;padding:4px;">✕</button>
+      </div>
+
+      <div style="background:#09090b;border:1px solid #27272a;border-radius:16px;padding:16px;margin-bottom:20px;text-align:left;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4ade80;font-weight:700;margin-bottom:6px;">
+          <span>💾</span> Saved Locally to Downloads
+        </div>
+        <div style="font-size:12px;color:#a1a1aa;word-break:break-all;margin-bottom:6px;">
+          File: <strong style="color:#ffffff;">${filename}</strong>
+        </div>
+        <div style="font-size:12px;color:#71717a;">
+          Duration: <strong style="color:#facc15;">${durationStr}</strong>
+        </div>
+      </div>
+
+      <div id="navsa-upload-section">
+        <p style="font-size:13px;color:#d4d4d8;margin-bottom:14px;line-height:1.4;">
+          Want to share this video? Upload it to your <strong>Google Drive</strong> to get a public shareable link.
+        </p>
+
+        <button id="navsa-btn-upload-drive" class="navsa-btn-primary">
+          <span>📁</span> Upload to Google Drive (Get Share Link)
+        </button>
+      </div>
+
+      <button id="navsa-btn-done" class="navsa-btn-secondary">
+        Keep Local & Close
+      </button>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('navsa-modal-close').addEventListener('click', () => modal.remove());
+    document.getElementById('navsa-btn-done').addEventListener('click', () => modal.remove());
+
+    const btnUpload = document.getElementById('navsa-btn-upload-drive');
+    const uploadSection = document.getElementById('navsa-upload-section');
+
+    btnUpload.addEventListener('click', async () => {
+      btnUpload.disabled = true;
+      btnUpload.style.opacity = '0.7';
+      btnUpload.innerHTML = `<span>⏳</span> Uploading to Google Drive...`;
+
+      try {
+        const driveResult = await uploadVideoToGoogleDrive(blob, filename);
+
+        if (driveResult && (driveResult.driveViewUrl || driveResult.fileId)) {
+          const watchUrl = `https://video-sharing-app-jordan.vercel.app/v/${videoId}?driveId=${driveResult.fileId}&driveUrl=${encodeURIComponent(driveResult.driveViewUrl)}`;
+
+          // Update storage with Drive link
+          chrome.storage.local.get(['navsa_drive_videos'], (result) => {
+            const existing = result.navsa_drive_videos || [];
+            const updated = existing.map((v) =>
+              v.id === videoId
+                ? { ...v, fileId: driveResult.fileId, driveViewUrl: driveResult.driveViewUrl, isUploaded: true }
+                : v
+            );
+            chrome.storage.local.set({ navsa_drive_videos: updated });
+          });
+
+          // Auto-copy share link to clipboard
+          try {
+            await navigator.clipboard.writeText(watchUrl);
+          } catch (e) {}
+
+          uploadSection.innerHTML = `
+            <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;border-radius:14px;padding:14px;margin-bottom:14px;text-align:left;">
+              <div style="color:#4ade80;font-weight:800;font-size:14px;margin-bottom:4px;">
+                ✅ Uploaded & Copied to Clipboard!
+              </div>
+              <div style="font-size:11px;color:#a1a1aa;word-break:break-all;">
+                ${watchUrl}
+              </div>
+            </div>
+            <button id="navsa-btn-open-watch" class="navsa-btn-primary" style="background:#22c55e;color:#000000;">
+              <span>🎬</span> Open & Watch Video
+            </button>
+          `;
+
+          document.getElementById('navsa-btn-open-watch').addEventListener('click', () => {
+            window.open(watchUrl, '_blank');
+            modal.remove();
+          });
+
+          showToastNotification('Google Drive Share Link Copied to Clipboard!');
+        } else {
+          throw new Error('Upload did not return a valid URL');
+        }
+      } catch (err) {
+        console.error('Drive upload failed:', err);
+        btnUpload.disabled = false;
+        btnUpload.style.opacity = '1';
+        btnUpload.innerHTML = `<span>⚠️</span> Retry Upload to Google Drive`;
+        showToastNotification('Drive upload error: ' + (err.message || 'Check Google login'));
+      }
+    });
   }
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
